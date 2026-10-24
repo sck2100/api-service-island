@@ -70,8 +70,8 @@
 | `catalog` | 商品目錄 | `(0, -1)` | 4 |
 | `order` | 訂單交易 | `(-1, 0)` | 4 |
 | `payment` | 支付清算 | `(-1, 1)` | 4 |
-| `inventory` | 庫存調度 | `(0, 1)` | 4 |
-| `delivery` | 物流配送 | `(2, -1)` | 4 |
+| `traffic` | 流量管控 | `(0, 1)` | 4 |
+| `registry` | 服務註冊與發現 | `(2, -1)` | 4 |
 | `notification` | 訊息通知 | `(2, -2)` | 4 |
 | `analytics` | 數據分析 | `(1, -2)` | 4 |
 | `platform` | 平台維運 | `(-1, -1)` | 5 |
@@ -81,6 +81,8 @@
 
 ### 1.3 目前 API 資料流
 
+> 2026-10-24 經使用者確認：原「庫存調度」「物流配送」與 API 架構無關，改為「流量管控」（`traffic`）與「服務註冊與發現」（`registry`）；axial、顏色與建物造型不變，對應的 `reserve`／`dispatch` 兩條流改為 `quota`／`discover`。
+
 目前 DATA 有 8 條資料流，符合 6～10 條限制：
 
 | id | 名稱 | 起點 | 終點 | 協定 | RPM |
@@ -89,8 +91,8 @@
 | `login` | 會員登入 | `api-gateway` | `auth-service` | HTTPS | 4100 |
 | `checkout` | 送出結帳 | `checkout-service` | `order-service` | gRPC | 2100 |
 | `charge` | 交易請款 | `order-service` | `payment-service` | gRPC | 1980 |
-| `reserve` | 保留庫存 | `order-service` | `reservation-service` | Kafka | 2050 |
-| `dispatch` | 建立配送 | `order-service` | `delivery-service` | Kafka | 1560 |
+| `quota` | 配額檢查 | `api-gateway` | `quota-service` | gRPC | 2050 |
+| `discover` | 服務查詢 | `order-service` | `discovery-service` | gRPC | 1560 |
 | `notify` | 交易通知 | `order-service` | `notification-service` | Kafka | 3600 |
 | `telemetry` | 觀測資料 | `event-collector` | `metrics-service` | OTLP | 16800 |
 

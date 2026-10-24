@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#071622">
+  <meta name="theme-color" content="#db6a41">
   <link rel="icon" href="data:,">
   <title>{架構示範}API 服務島</title>
   <style>
@@ -17,7 +17,7 @@
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
     body { background: radial-gradient(circle at 50% 20%, #17364a 0%, #071622 48%, #030910 100%); }
     #app { position: relative; width: 100%; height: 100%; isolation: isolate; }
-    #scene { position: absolute; inset: 0; }
+    #scene { position: absolute; inset: 0; z-index: 0; }
     #scene canvas { display: block; width: 100%; height: 100%; outline: none; }
     .brand {
       position: absolute; z-index: 5; top: max(18px, env(safe-area-inset-top)); left: max(20px, env(safe-area-inset-left));
@@ -157,6 +157,52 @@
     .tutorial-actions { display:grid; grid-template-columns:auto auto 1fr; gap:7px; margin-top:16px; }.tutorial-actions button { border-radius:9px; padding:8px 12px; background:rgba(255,255,255,.09); color:#fff; }.tutorial-actions .primary-btn { width:auto; margin:0; justify-self:stretch; }
     #reload-btn { display:none; margin:18px auto 0; padding:8px 18px; border-radius:9px; background:var(--cream); color:var(--ink); font-weight:800; }
     #status.is-error #reload-btn { display:inline-flex; }
+    /* Warm paper UI skin: cream surfaces, ink type, coral accents. */
+    :root { --cream:#fff8f4; --paper:rgba(255,248,244,.94); --ink:#211d1d; --coral:#db6a41; --coral-dark:#a5442a; --yellow:#fcea8b; --muted:#78685e; --teal:#3e7c8c; --glass:rgba(255,248,244,.93); --line:rgba(33,29,29,.15); --shadow:0 2px 8px rgba(74,42,20,.08),0 18px 40px rgba(74,42,20,.12); color-scheme:light; color:var(--ink); background:#e9e0d4; font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",ui-sans-serif,system-ui,sans-serif; }
+    body { background:linear-gradient(180deg,#f3ece3,#d9e3df); }
+    .ui-surface { border:1px solid var(--line); background:var(--glass); color:var(--ink); box-shadow:var(--shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    .eyebrow, .brand__eyebrow, .detail-panel .eyebrow, .hud-time .eyebrow { color:var(--coral); }
+    h1, h2, .tutorial-step strong { color:var(--ink); font-weight:900; letter-spacing:-.01em; }
+    .brand h1 { color:var(--ink); letter-spacing:-.02em; }
+    .brand__subtitle, .log-note, .detail-panel p, .help-dialog p, .hud-time #period-name { color:var(--muted); }
+    .tool-btn, .hud-btn, .time-btn, .icon-close, .tutorial-actions button, .detail-back, .detail-close { border:1px solid var(--line); border-radius:999px; background:#fffdfa; color:var(--ink); box-shadow:none; }
+    .hud-btn { border-radius:16px; }.hud-btn b { white-space:nowrap; }
+    .tool-btn span, .hud-btn > span { color:var(--coral); }
+    button:not(:disabled):hover { background:var(--yellow); color:var(--ink); }
+    button:not(:disabled):active, button[aria-pressed="true"], .tool-btn[aria-pressed="true"], .hud-btn[aria-pressed="true"] { background:var(--ink); border-color:var(--ink); color:var(--cream); }
+    button[aria-pressed="true"] > span { color:var(--yellow); }
+    .primary-btn, .tutorial-actions .primary-btn, #reload-btn { border:0; border-radius:12px; background:var(--ink); color:var(--cream); font-weight:800; box-shadow:0 0 0 2px var(--cream),0 0 0 4px var(--coral); }
+    .primary-btn:not(:disabled):hover { background:var(--coral); color:#fff; }
+    .search-box, .log-filter { border:1px solid var(--line); background:#fffdfa; color:var(--ink); }
+    .search-box input { color:var(--ink); }.search-box input::placeholder { color:#9a8679; }.search-box > span { color:var(--coral); }
+    .tabs { background:#f2e5dc; }.tabs button { color:var(--muted); }.tabs button[aria-selected="true"] { background:var(--ink); color:var(--cream); }
+    .domain-group { border:0; border-bottom:1px solid var(--line); border-radius:0; background:transparent; }
+    .domain-group summary { font-weight:700; }.domain-group summary::after { color:var(--coral); }
+    .domain-select, .service-row, .flow-row { color:var(--ink); }.domain-select { color:var(--coral-dark); }
+    .service-row { border-top:1px solid rgba(33,29,29,.08); }.service-row .node-no { background:transparent; color:var(--coral); }
+    .service-row small, .flow-row small, .flow-route, .status-wrap { color:var(--muted); }
+    .flow-row { border:1px solid var(--line); background:#fffdfa; }
+    .empty-state { border-color:var(--line); color:var(--muted); }
+    .detail-panel { background:var(--paper); }
+    .detail-icon, .flow-hero { background:var(--ink); color:var(--cream); }
+    .thumbnail-wrap { background:linear-gradient(145deg,#f4ece4,#e6f1f1); }
+    .metric, .node-list button { background:#fffdfa; border:1px solid var(--line); }
+    .metric strong, .hud-time strong, .flow-hero strong { font:900 22px/1 "Noto Sans TC","Microsoft JhengHei",ui-sans-serif,sans-serif; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+    .metric small { color:var(--muted); }
+    .chip { background:#fff1e8; color:var(--coral-dark); }button.chip { border-color:rgba(219,106,65,.28); }
+    .hud { border-radius:999px; padding:7px 10px; }.hud-time { border-right-color:var(--line); }
+    .time-btn { color:var(--ink); }
+    .log-entry { border-top-color:var(--line); }.log-entry b { color:var(--coral); }.log-entry span { color:#3d3431; }.log-empty { color:var(--muted); }
+    .flow-legend { color:var(--ink); }
+    .help-dialog { color:var(--ink); }.help-dialog::backdrop { background:rgba(33,29,29,.28); backdrop-filter:blur(6px); }
+    .tutorial-progress i { background:var(--line); }
+    #status { background:radial-gradient(circle at 50% 45%,#fff8f4,#efe4da); color:var(--ink); }#status p { color:var(--muted); }
+    .loader { border-color:rgba(219,106,65,.2); border-top-color:var(--coral); }#status.is-error h2 { color:var(--coral-dark); }#status.is-error .loader { border-color:var(--coral); }
+    .island-label { border:1px solid rgba(33,29,29,.12); background:rgba(255,253,250,.94); color:var(--ink); box-shadow:0 2px 8px rgba(74,42,20,.16); font-weight:800; backdrop-filter:none; }
+    .island-label.is-selected { background:var(--ink); border-color:var(--coral); color:var(--cream); }
+    .service-pin, .walker-label { border-color:rgba(219,106,65,.55); background:rgba(255,253,250,.95); color:var(--ink); box-shadow:0 2px 6px rgba(74,42,20,.14); }
+    .service-pin b { color:var(--coral); }.walker-label.is-compact::after { color:var(--ink); }
+    .walker-label.is-overview-dot { border-color:#fff8f4; background:var(--coral); }
     @media (max-width:1100px) { .log-panel { right:16px; top:188px; width:318px; } }
     @media (max-width:900px) { .detail-panel { top:176px; } }
     @media (max-width:700px) {
@@ -169,16 +215,16 @@
     }
     @media (max-width:800px) {
       html,body,#app { height:100dvh; }
-      .brand { top:max(10px,env(safe-area-inset-top)); left:max(10px,env(safe-area-inset-left)); width:172px; padding:10px; }
-      .brand__eyebrow { display:none; }.brand h1 { font-size:16px; line-height:1.15; }.brand__subtitle { margin:3px 0 8px; font-size:10px; }
-      .toolbar { grid-template-columns:1fr; gap:5px; }.tool-btn { justify-content:flex-start; min-height:44px; padding:6px 11px; }
+      .brand { top:max(10px,env(safe-area-inset-top)); left:max(10px,env(safe-area-inset-left)); display:flex; align-items:center; gap:8px; width:auto; max-width:calc(100vw - 20px); padding:5px 5px 5px 14px; border-radius:999px; }
+      .brand__eyebrow, .brand__subtitle { display:none; }.brand h1 { flex:1 1 auto; min-width:0; overflow:hidden; font-size:15px; line-height:1.15; white-space:nowrap; text-overflow:ellipsis; }
+      .toolbar { display:flex; flex:0 0 auto; gap:4px; }.tool-btn { width:44px; min-width:44px; min-height:44px; padding:0; }.tool-btn b { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
       .catalog-panel,.detail-panel { --sheet-height:52dvh; z-index:10; top:auto; right:0; bottom:0; left:0; width:100%; height:var(--sheet-height); max-height:100dvh; padding:4px 14px calc(14px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; transform:translateY(105%); opacity:1; visibility:hidden; transition:transform .26s ease,visibility .26s; overflow:hidden; }
       .catalog-panel.is-expanded,.detail-panel.is-expanded { padding-top:calc(4px + env(safe-area-inset-top)); }
       .detail-panel { --sheet-height:34dvh; color:var(--ink); }.catalog-panel.is-open,.detail-panel.is-open { transform:none; visibility:visible; }
-      .sheet-handle,.detail-back { display:block; }.detail-actions { position:sticky; z-index:3; top:0; float:right; }.detail-back { min-width:44px; padding:0 10px; border-radius:9px; background:rgba(16,43,50,.08); color:var(--ink); }
-      .detail-close { position:static; float:none; margin:0; }.catalog-content { height:calc(100% - 174px); }.detail-panel #detail-content { height:calc(100% - 52px); overflow:auto; padding-bottom:12px; }
+      .sheet-handle,.detail-back { display:block; }.detail-actions { position:relative; z-index:3; float:none; align-items:center; justify-content:space-between; margin:0 0 6px; }.detail-back { min-width:44px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:#fffdfa; color:var(--ink); font-weight:700; }
+      .detail-close { position:static; float:none; margin:0; }.catalog-content { height:calc(100% - 174px); }.detail-panel #detail-content { height:calc(100% - 96px); overflow:auto; padding-bottom:12px; }
       .hud { z-index:13; right:auto; bottom:max(8px,env(safe-area-inset-bottom)); left:max(8px,env(safe-area-inset-left)); width:auto; max-width:calc(100vw - 16px); padding:5px; transform:none; overflow:hidden; }
-      .hud-toggle { display:flex; flex-direction:column; min-width:66px; min-height:58px; align-items:center; justify-content:center; gap:2px; border-radius:10px; background:rgba(226,247,243,.09); color:#fff; }.hud-toggle span { font-size:18px; }.hud-toggle b { font-size:10px; }
+      .hud-toggle { display:flex; flex-direction:column; min-width:66px; min-height:58px; align-items:center; justify-content:center; gap:2px; border:1px solid var(--line); border-radius:16px; background:#fffdfa; color:var(--ink); }.hud-toggle span { font-size:18px; }.hud-toggle b { font-size:10px; }
       .hud:not(.is-open) .hud-contents { display:none; }.hud.is-open { right:8px; width:calc(100vw - 16px); max-height:46dvh; flex-wrap:wrap; overflow:auto; }.hud.is-open .hud-contents { display:contents; }.hud.is-open .hud-time { display:grid; }.hud.is-open .hud-group { display:flex; }.hud.is-open .hud-toggle { position:sticky; left:0; }
       .hud-time { min-width:78px; }.hud-btn { min-width:55px; }.time-btn { min-width:51px; }
       .log-panel { z-index:14; top:auto; right:0; bottom:0; left:0; width:100%; height:min(62dvh,560px); max-height:calc(100dvh - env(safe-area-inset-top) - 10px); padding:16px 14px calc(14px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; transform:translateY(105%); }.log-panel.is-open { transform:none; }.log-list { max-height:calc(100% - 132px); }
@@ -271,7 +317,7 @@
         <button id="reload-btn" class="primary-btn reload-btn" type="button" hidden>重新載入</button>
       </div>
     </section>
-    <noscript><section style="position:absolute;z-index:30;inset:0;display:grid;place-items:center;padding:24px;background:#071622;text-align:center"><div><h2>需要啟用 JavaScript</h2><p style="color:#a8c5cf">這座互動式 3D 城市需要 JavaScript 與 WebGL 才能運作。</p></div></section></noscript>
+    <noscript><section style="position:absolute;z-index:30;inset:0;display:grid;place-items:center;padding:24px;background:#fff8f4;color:#211d1d;text-align:center"><div><h2>需要啟用 JavaScript</h2><p style="color:#78685e">這座互動式 3D 城市需要 JavaScript 與 WebGL 才能運作。</p></div></section></noscript>
   </main>
 
   <script type="module">
@@ -286,6 +332,10 @@
       },
       artDirection: {
         id:'warm-clay-toy-city', seed:928341, friendlyMainFaceChance:.36,
+        density:{seed:61427, gridStep:.45, plazaScale:.55, curbScale:.79, roadClearance:.5, edgeMargin:.18, spacing:.16,
+          house:{radius:.56, max:12, twoStoryChance:.35, walls:['#fff1e4','#f6e3cf','#f3dcc4','#fbefe6'], roofs:['#db6a41','#c4553a','#e0a63a','#3e7c8c','#db6a41']},
+          bush:{radius:.5, max:6}, parasol:{radius:.5, max:2, canopies:['#db6a41','#fcea8b','#fff8f4']},
+          lawn:{radius:1.05, max:6, colors:['#a9c47f','#9dbb74','#b6cc8a']}},
         matteRoughness:.94, glowRoughness:.78, shadowRadius:3,
         showcase:{
           domainId:'gateway', plaza:'#eee0c6', plazaInset:'#dab38f', path:'#d7b28c', curb:'#f7e9d1', cliff:'#b79b7e',
@@ -303,9 +353,9 @@
             trees:[[-6.05,2.10],[-2.25,5.75],[4.95,3.55],[-5.60,-3.30],[5.78,-2.85]], beds:[[-4.65,3.75],[4.88,3.35],[-4.75,-3.60],[4.70,-3.60]], plazaForm:'courtyard'},
           catalog:{mainArchetype:'monolith', mainForm:'market-shelves', plaza:'#f2deb9', plazaInset:'#dbbd91', path:'#e4c59b', curb:'#faecd3', cliff:'#b7a082', accent:'#8a9a70', foliage:'#8a9f70', treeForm:'layered', nearCabinets:true,
             trees:[[-5.65,2.60],[-.50,6.25],[5.90,2.55],[-5.80,-2.75],[5.38,-3.30]], beds:[[-4.85,3.35],[4.60,3.60],[-4.65,-3.70],[4.80,-3.35]], plazaForm:'market'},
-          inventory:{mainArchetype:'server-array', mainForm:'storage-bins', plaza:'#e9e1c6', plazaInset:'#cdbb97', path:'#d8c6a5', curb:'#f7eed9', cliff:'#a8a08a', accent:'#819b78', foliage:'#829d70', treeForm:'layered', nearCabinets:true,
+          traffic:{mainArchetype:'server-array', mainForm:'storage-bins', plaza:'#e9e1c6', plazaInset:'#cdbb97', path:'#d8c6a5', curb:'#f7eed9', cliff:'#a8a08a', accent:'#819b78', foliage:'#829d70', treeForm:'layered', nearCabinets:true,
             trees:[[-5.85,2.50],[.85,6.05],[5.80,2.65],[-5.35,-3.35],[5.70,-3.00]], beds:[[-4.70,3.50],[4.75,3.45],[-4.80,-3.40],[4.65,-3.60]], plazaForm:'stock'},
-          delivery:{mainArchetype:'adapter', mainForm:'dispatch-post', plaza:'#f0e0ca', plazaInset:'#d2b79b', path:'#e0bea0', curb:'#f9ebd8', cliff:'#bba08b', accent:'#7199a0', foliage:'#739177', treeForm:'puff', nearCabinets:true,
+          registry:{mainArchetype:'adapter', mainForm:'dispatch-post', plaza:'#f0e0ca', plazaInset:'#d2b79b', path:'#e0bea0', curb:'#f9ebd8', cliff:'#bba08b', accent:'#7199a0', foliage:'#739177', treeForm:'puff', nearCabinets:true,
             trees:[[-5.70,2.85],[-1.05,6.05],[5.83,2.65],[-5.65,-3.10],[5.45,-3.35]], beds:[[-4.80,3.45],[4.65,3.60],[-4.55,-3.65],[4.85,-3.35]], plazaForm:'route'},
           notification:{mainArchetype:'message-queue', mainForm:'message-bell', plaza:'#f0dcda', plazaInset:'#d6b3a7', path:'#dfbea9', curb:'#faeadd', cliff:'#b39b96', accent:'#a08ba8', foliage:'#78916e', treeForm:'rounded', nearCabinets:true,
             trees:[[-5.88,2.60],[.55,6.14],[5.72,2.98],[-5.65,-3.12],[5.50,-3.18]], beds:[[-4.75,3.55],[4.80,3.42],[-4.70,-3.55],[4.65,-3.58]], plazaForm:'message'},
@@ -337,20 +387,22 @@
         seed:173281, terrainSize:170, terrainSegments:160, treeRadius:[16,52],
         cityTerrainClearRadius:[10.5,16], cityTerrainClearHeight:-3.4,
         desktopTreeCount:300, mobileTreeCount:150, cloudGroups:12, cloudSpeed:0.42,
-        water:{near:'#b7eae4',far:'#78c2cf',nearMix:.88,farMix:.75,gradientRadius:[18,100],horizonBlend:[65,115],
+        water:{near:'#5a9ea8',far:'#3e7c8c',nearMix:.82,farMix:.7,gradientRadius:[18,100],horizonBlend:[65,115],
           waveAmplitude:[.050,.038,.022],waveFrequency:[.046,.052,.023],waveSpeed:[.29,.22,.17],rippleContrast:.018},
-        shore:{shallow:'#a5e8e1',shallowOpacity:.27,foam:'#f4fffa',foamOpacity:.48,foamScale:1.048,foamWidth:.045},
+        shore:{shallow:'#9fd6cc',shallowOpacity:.42,foam:'#fff8f4',foamOpacity:.72,foamScale:1.048,foamWidth:.045},
         terrain:{ringCenter:48,ringWidth:24,ringHeight:5.6,noiseFrequency:.018,noiseOctaves:3,noiseLacunarity:1.85,noisePersistence:.43,noiseAmplitude:2.05,terraceStep:.28,terraceMix:.18,
-          low:'#82aa9d',mid:'#a9bea3',high:'#d0cbaa'},
-        coniferChance:.25,treeScale:[.78,1.22],treeColors:{conifer:['#769c88','#86a992','#91b29a'],broad:['#83a780','#96b58b','#a4bf98']},
-        cloudColors:{day:'#f7f5eb',night:'#8ca3b0'},
-        mountainRings:[{radius:59,height:2.8,color:'#80a89f',fade:.18},{radius:69,height:3.6,color:'#9fbdb6',fade:.35},{radius:79,height:4.4,color:'#bed1ce',fade:.56}],
+          low:'#93b276',mid:'#bcc58b',high:'#e2d6a6'},
+        coniferChance:.25,treeScale:[.78,1.22],treeColors:{conifer:['#5b8a5c','#6a9862','#79a56a'],broad:['#6c9c58','#80ad62','#93ba6e']},
+        cloudColors:{day:'#fffaf2',night:'#8ca3b0'},
+        mountainRings:[{radius:59,height:2.8,color:'#9cb47e',fade:.18},{radius:69,height:3.6,color:'#bcc79a',fade:.35},{radius:79,height:4.4,color:'#d8d6b4',fade:.56}],
+        marineScatter:{seed:30917, radius:[13,46], islandClearance:12.5, spacing:5.2, waterDepth:-2.1,
+          counts:{sailboat:10, sandbar:5, buoy:7}, sails:['#fff8f4','#fff8f4','#db6a41'], hulls:['#fff8f4','#3e7c8c','#db6a41'], sand:'#ead8ad'},
         marine:[{kind:'islet',position:[-49,-24],scale:3.3},{kind:'tower',position:[48,-18],scale:1.1},{kind:'boat',position:[-42,31],scale:1.0}]
       },
       stage3: {
         camera:{duration:800,islandOffset:[2.75,5.3,6.2],serviceOffset:[1.6,2.5,3.2],panelTargetShift:1.5,birdOffset:[.01,42,6]},
         selectionMix:.22, highLoadMix:.22, pointerTolerance:6, labelHysteresis:8,
-        overview:{target:[0,0,-2],wideDistance:118,narrowDistance:146},
+        overview:{target:[2.3,0,-3.9],direction:[32,65,39],wideDistance:96,narrowDistance:150,maxDistance:140},
         timePresets:[540,720,900,1260]
       },
       stage4: {
@@ -361,7 +413,9 @@
           highLoadPulse:{amplitude:.028,speed:.82,updatesPerSecond:5},
           queue:{distance:.68,spacing:.46,hold:[2.2,3.5],nodes:[{serviceId:'notification-service',flowIds:['notify','mq-replay'],max:2},{serviceId:'order-service',flowIds:['mq-replay','batch-report'],max:2}]}}
       },
-      stage5:{mobileBreakpoint:800,catalogHeight:52,detailHeight:34,mobilePixelRatio:1.4,tutorialStorage:'api-service-island:tutorial-v1'},
+      ambient:{cars:{seed:77213, desktopCount:70, mobileCount:35, distanceScale:{near:30, far:85, max:1.7}, speed:[1.1,1.9], lateral:[.38,.46], scale:[.95,1.08], groundY:.44, bridgeY:.6, bob:.012, idleRate:14, turnRate:9,
+        cabin:'#f4ece4', wheels:'#3d3431', colors:['#db6a41','#3e7c8c','#fcea8b','#fff8f4','#2f6170','#e0a63a','#c4553a','#8aa86b']}},
+      stage5:{mobileBreakpoint:800,catalogHeight:52,detailHeight:34,sheetViewShift:.5,mobilePixelRatio:1.4,tutorialStorage:'api-service-island:tutorial-v1'},
       i18n: {
         zh:{ subtitle:'API 服務島',overview:'全景',list:'清單',help:'說明',search:'搜尋網域、服務或說明',domainsTab:'系統網域',flowsTab:'呼叫關係',
           close:'關閉',cityIndex:'城市索引',gotIt:'知道了',jumpTo:'跳至',noResults:'找不到符合條件的項目',nodes:'服務節點',connections:'相關連線',status:'狀態',metrics:'營運指標',from:'來源',to:'目的地',
@@ -421,17 +475,17 @@
           { id:'refund-service', name:'退款服務', description:'處理退款與原路退回。', metrics:{ rpm:190, p95:312, availability:99.92 }, status:'maintenance', model:'utility-pod' },
           { id:'ledger-service', name:'交易帳本', description:'留下可核對的收付款紀錄。', metrics:{ rpm:2600, p95:61, availability:99.99 }, status:'healthy', model:'vault' }
         ]},
-        { id: 'inventory', name: '庫存調度', axial: [0, 1], color: '#d8e56f', services: [
-          { id:'inventory-service', name:'庫存服務', description:'回報各地可售數量。', metrics:{ rpm:5700, p95:72, availability:99.96 }, status:'healthy', model:'warehouse' },
-          { id:'reservation-service', name:'庫存保留', description:'結帳期間暫時鎖定商品。', metrics:{ rpm:2400, p95:89, availability:99.94 }, status:'healthy', model:'lock-house' },
-          { id:'warehouse-service', name:'倉儲服務', description:'協調揀貨與倉庫作業。', metrics:{ rpm:1200, p95:138, availability:99.91 }, status:'warning', model:'warehouse' },
-          { id:'stock-event', name:'庫存事件', description:'發布補貨、扣庫與盤點變化。', metrics:{ rpm:6600, p95:29, availability:99.98 }, status:'healthy', model:'signal-tower' }
+        { id: 'traffic', name: '流量管控', axial: [0, 1], color: '#d8e56f', services: [
+          { id:'traffic-policy', name:'流量策略', description:'依用戶端、路徑與方案設定限流規則。', metrics:{ rpm:5700, p95:72, availability:99.96 }, status:'healthy', model:'warehouse' },
+          { id:'quota-service', name:'配額管理', description:'追蹤每把 API 金鑰的每日用量配額。', metrics:{ rpm:2400, p95:89, availability:99.94 }, status:'healthy', model:'lock-house' },
+          { id:'circuit-breaker', name:'熔斷保護', description:'下游異常時暫停轉送並自動復原。', metrics:{ rpm:1200, p95:138, availability:99.91 }, status:'warning', model:'warehouse' },
+          { id:'throttle-event', name:'限流事件', description:'發布超量、封鎖與解除限流事件。', metrics:{ rpm:6600, p95:29, availability:99.98 }, status:'healthy', model:'signal-tower' }
         ]},
-        { id: 'delivery', name: '物流配送', axial: [2, -1], color: '#7bd9ff', services: [
-          { id:'delivery-service', name:'配送服務', description:'建立配送任務並追蹤狀態。', metrics:{ rpm:1600, p95:143, availability:99.94 }, status:'healthy', model:'dispatch-hall' },
-          { id:'route-planner', name:'路線規劃', description:'計算更有效率的配送路線。', metrics:{ rpm:470, p95:284, availability:99.89 }, status:'warning', model:'route-station' },
-          { id:'carrier-adapter', name:'物流介接', description:'串接不同物流商的格式。', metrics:{ rpm:1400, p95:201, availability:99.92 }, status:'healthy', model:'adapter-port' },
-          { id:'tracking-service', name:'包裹追蹤', description:'提供包裹目前位置與進度。', metrics:{ rpm:5100, p95:83, availability:99.96 }, status:'healthy', model:'radar-tower' }
+        { id: 'registry', name: '服務註冊與發現', axial: [2, -1], color: '#7bd9ff', services: [
+          { id:'discovery-service', name:'服務發現', description:'依名稱、版本與區域解析可用的服務實例。', metrics:{ rpm:1600, p95:143, availability:99.94 }, status:'healthy', model:'dispatch-hall' },
+          { id:'health-checker', name:'健康檢查', description:'定期探測實例並剔除異常節點。', metrics:{ rpm:470, p95:284, availability:99.89 }, status:'warning', model:'route-station' },
+          { id:'config-center', name:'設定中心', description:'集中發布服務設定與功能開關。', metrics:{ rpm:1400, p95:201, availability:99.92 }, status:'healthy', model:'adapter-port' },
+          { id:'service-mesh', name:'服務網格', description:'在服務之間處理加密、重試與流量分配。', metrics:{ rpm:5100, p95:83, availability:99.96 }, status:'healthy', model:'radar-tower' }
         ]},
         { id: 'notification', name: '訊息通知', axial: [2, -2], color: '#c89cff', services: [
           { id:'notification-service', name:'通知中心', description:'決定何時用哪個管道通知。', metrics:{ rpm:3900, p95:64, availability:99.95 }, status:'healthy', model:'signal-hall' },
@@ -465,8 +519,8 @@
         { id:'login', name:'會員登入', from:'api-gateway', to:'auth-service', protocol:'HTTPS', rpm:4100, level:'關鍵', mode:'sync', payload:'登入憑證', actor:'驗證封包', walkers:8, speed:.64, accessory:'lock', badge:'jwe' },
         { id:'checkout', name:'送出結帳', from:'checkout-service', to:'order-service', protocol:'gRPC', rpm:2100, level:'關鍵', mode:'sync', payload:'購物車快照', actor:'結帳封包', walkers:7, speed:.37, accessory:'shield', badge:'token' },
         { id:'charge', name:'交易請款', from:'order-service', to:'payment-service', protocol:'gRPC', rpm:1980, level:'關鍵', mode:'sync', payload:'付款授權', actor:'支付封包', walkers:6, speed:.35, accessory:'lock', badge:'jws' },
-        { id:'reserve', name:'保留庫存', from:'order-service', to:'reservation-service', protocol:'Kafka', rpm:2050, level:'核心', mode:'async', payload:'庫存保留事件', actor:'庫存事件', walkers:9, speed:.66, accessory:'shield', badge:'json' },
-        { id:'dispatch', name:'建立配送', from:'order-service', to:'delivery-service', protocol:'Kafka', rpm:1560, level:'一般', mode:'async', payload:'出貨任務', actor:'配送事件', walkers:5, speed:.34, accessory:'shield', badge:'token' },
+        { id:'quota', name:'配額檢查', from:'api-gateway', to:'quota-service', protocol:'gRPC', rpm:2050, level:'核心', mode:'sync', payload:'API 金鑰與用量', actor:'配額封包', walkers:9, speed:.66, accessory:'shield', badge:'json' },
+        { id:'discover', name:'服務查詢', from:'order-service', to:'discovery-service', protocol:'gRPC', rpm:1560, level:'一般', mode:'sync', payload:'服務名稱與版本', actor:'查詢封包', walkers:5, speed:.34, accessory:'shield', badge:'token' },
         { id:'notify', name:'交易通知', from:'order-service', to:'notification-service', protocol:'Kafka', rpm:3600, level:'一般', mode:'async', payload:'通知內容', actor:'訊息事件', walkers:7, speed:.38, accessory:'magnifier', badge:'json' },
         { id:'telemetry', name:'觀測資料', from:'event-collector', to:'metrics-service', protocol:'OTLP', rpm:16800, level:'觀測', mode:'pending', payload:'追蹤與指標批次', actor:'遙測封包', walkers:12, speed:.70, accessory:'magnifier', badge:'json' },
         { id:'batch-report', name:'帳務報表批次', from:'order-service', to:'report-service', protocol:'Kafka', rpm:420, level:'批次', mode:'async', payload:'彙總帳務事件', actor:'報表批次封包', walkers:8, speed:.36, accessory:'shield', badge:'json' },
@@ -474,27 +528,27 @@
       ],
       get apiFlows(){ return this.flows; },
       dayCycle: [
-        { id:'dawn', label:'清晨', start:'05:00', highLoad:['scheduler','stock-event'], flowLoad:{reserve:1.1,dispatch:.8,telemetry:.9,'batch-report':1.0} },
-        { id:'morning', label:'早晨', start:'07:00', highLoad:['auth-service','api-gateway','catalog-service','order-service'], flowLoad:{browse:2.3,login:2.2,checkout:1.7,charge:1.1,reserve:1.0,dispatch:.55,notify:.65,telemetry:.8,'batch-report':.55,'mq-replay':.4} },
-        { id:'noon', label:'正午', start:'11:00', highLoad:['search-index','cart-service','pricing-service'], flowLoad:{browse:1.0,login:.8,checkout:1.0,charge:.8,reserve:.9,dispatch:.8,notify:.9,telemetry:1.0,'batch-report':.8,'mq-replay':.7} },
-        { id:'afternoon', label:'午後', start:'14:00', highLoad:['order-service','checkout-service','payment-service','report-service'], flowLoad:{browse:.7,login:.65,checkout:2.2,charge:2.3,reserve:1.7,dispatch:1.0,notify:1.1,telemetry:.9,'batch-report':1.8,'mq-replay':.65} },
-        { id:'sunset', label:'黃昏', start:'17:00', highLoad:['delivery-service','tracking-service','notification-service'], flowLoad:{browse:.7,login:.6,checkout:1.0,charge:1.0,reserve:.8,dispatch:2.2,notify:1.8,telemetry:1.0,'batch-report':1.0,'mq-replay':1.1} },
-        { id:'evening', label:'晚間', start:'19:00', highLoad:['stream-processor','report-service','event-collector','notification-service','order-service'], flowLoad:{browse:.3,login:.35,checkout:.45,charge:.4,reserve:.5,dispatch:.45,notify:2.2,telemetry:1.2,'batch-report':2.3,'mq-replay':2.3} },
-        { id:'midnight', label:'深夜', start:'23:00', highLoad:['log-service','metrics-service','trace-service','report-service','notification-service'], flowLoad:{browse:.25,login:.25,checkout:.3,charge:.3,reserve:.45,dispatch:.35,notify:1.9,telemetry:1.5,'batch-report':2.1,'mq-replay':2.2} },
-        { id:'predawn', label:'夜盡', start:'03:00', highLoad:['deployment-service','health-service'], flowLoad:{browse:.35,login:.35,checkout:.4,charge:.4,reserve:.7,dispatch:.5,notify:.7,telemetry:1.1,'batch-report':1.0,'mq-replay':.8} }
+        { id:'dawn', label:'清晨', start:'05:00', highLoad:['scheduler','throttle-event'], flowLoad:{quota:1.1,discover:.8,telemetry:.9,'batch-report':1.0} },
+        { id:'morning', label:'早晨', start:'07:00', highLoad:['auth-service','api-gateway','catalog-service','order-service'], flowLoad:{browse:2.3,login:2.2,checkout:1.7,charge:1.1,quota:1.0,discover:.55,notify:.65,telemetry:.8,'batch-report':.55,'mq-replay':.4} },
+        { id:'noon', label:'正午', start:'11:00', highLoad:['search-index','cart-service','pricing-service'], flowLoad:{browse:1.0,login:.8,checkout:1.0,charge:.8,quota:.9,discover:.8,notify:.9,telemetry:1.0,'batch-report':.8,'mq-replay':.7} },
+        { id:'afternoon', label:'午後', start:'14:00', highLoad:['order-service','checkout-service','payment-service','report-service'], flowLoad:{browse:.7,login:.65,checkout:2.2,charge:2.3,quota:1.7,discover:1.0,notify:1.1,telemetry:.9,'batch-report':1.8,'mq-replay':.65} },
+        { id:'sunset', label:'黃昏', start:'17:00', highLoad:['discovery-service','service-mesh','notification-service'], flowLoad:{browse:.7,login:.6,checkout:1.0,charge:1.0,quota:.8,discover:2.2,notify:1.8,telemetry:1.0,'batch-report':1.0,'mq-replay':1.1} },
+        { id:'evening', label:'晚間', start:'19:00', highLoad:['stream-processor','report-service','event-collector','notification-service','order-service'], flowLoad:{browse:.3,login:.35,checkout:.45,charge:.4,quota:.5,discover:.45,notify:2.2,telemetry:1.2,'batch-report':2.3,'mq-replay':2.3} },
+        { id:'midnight', label:'深夜', start:'23:00', highLoad:['log-service','metrics-service','trace-service','report-service','notification-service'], flowLoad:{browse:.25,login:.25,checkout:.3,charge:.3,quota:.45,discover:.35,notify:1.9,telemetry:1.5,'batch-report':2.1,'mq-replay':2.2} },
+        { id:'predawn', label:'夜盡', start:'03:00', highLoad:['deployment-service','health-service'], flowLoad:{browse:.35,login:.35,checkout:.4,charge:.4,quota:.7,discover:.5,notify:.7,telemetry:1.1,'batch-report':1.0,'mq-replay':.8} }
       ],
       lightKeyframes: [
         { minute:0, sky:'#020713', horizon:'#11233d', sun:'#6680a8', sunIntensity:0.02, hemiIntensity:0.10, fog:'#07131e', water:'#071b2b' },
         { minute:300, sky:'#15233d', horizon:'#f48a70', sun:'#ffb274', sunIntensity:0.55, hemiIntensity:0.32, fog:'#334c5e', water:'#17425b' },
-        { minute:480, sky:'#2389bb', horizon:'#bdeeff', sun:'#fff2cf', sunIntensity:1.55, hemiIntensity:0.72, fog:'#87bac8', water:'#14728c' },
-        { minute:720, sky:'#3ca7d3', horizon:'#e8fbff', sun:'#fff8df', sunIntensity:2.00, hemiIntensity:0.88, fog:'#a7d3d8', water:'#1389a1' },
-        { minute:1020, sky:'#2c79a1', horizon:'#ffb27b', sun:'#ffbd78', sunIntensity:1.00, hemiIntensity:0.55, fog:'#688c98', water:'#17677c' },
+        { minute:480, sky:'#5fb2c9', horizon:'#f6ead8', sun:'#fff0cc', sunIntensity:1.55, hemiIntensity:0.72, fog:'#c9d8c8', water:'#2f6f80' },
+        { minute:720, sky:'#6dbcd0', horizon:'#fbf2e4', sun:'#fff6dc', sunIntensity:2.00, hemiIntensity:0.88, fog:'#d5e0cf', water:'#327787' },
+        { minute:1020, sky:'#4f8fa8', horizon:'#ffc08c', sun:'#ffbd78', sunIntensity:1.00, hemiIntensity:0.55, fog:'#b4a894', water:'#2b6474' },
         { minute:1140, sky:'#18294a', horizon:'#f06f78', sun:'#ff8f77', sunIntensity:0.30, hemiIntensity:0.25, fog:'#35485b', water:'#12394e' },
         { minute:1320, sky:'#050a1b', horizon:'#172a47', sun:'#819bd0', sunIntensity:0.04, hemiIntensity:0.12, fog:'#0d1b29', water:'#081f31' },
         { minute:1440, sky:'#020713', horizon:'#11233d', sun:'#6680a8', sunIntensity:0.02, hemiIntensity:0.10, fog:'#07131e', water:'#071b2b' }
       ],
       english:{
-        domains:{gateway:'Gateway',identity:'Identity',customer:'Customer',catalog:'Catalog',order:'Orders',payment:'Payments',inventory:'Inventory',delivery:'Delivery',notification:'Notifications',analytics:'Analytics',platform:'Platform',observability:'Observability'},
+        domains:{gateway:'Gateway',identity:'Identity',customer:'Customer',catalog:'Catalog',order:'Orders',payment:'Payments',traffic:'Traffic Control',registry:'Service Discovery',notification:'Notifications',analytics:'Analytics',platform:'Platform',observability:'Observability'},
         services:{
           'api-gateway':['API Gateway','Receives external requests and routes them.'],'rate-limiter':['Rate Limiter','Controls traffic bursts to prevent overload.'],waf:['Application Firewall','Blocks malicious or abnormal requests.'],'request-router':['Request Router','Routes requests to the correct system.'],
           'auth-service':['Sign-in Service','Validates credentials and sign-in flows.'],'token-service':['Token Center','Issues and refreshes access tokens.'],'permission-service':['Permission Service','Determines which actions a user may perform.'],'profile-service':['Account Profile','Stores account details and preferences.'],
@@ -502,14 +556,14 @@
           'catalog-service':['Product Catalog','Provides product names, categories, and availability.'],'pricing-service':['Pricing Service','Calculates prices, discounts, and regional pricing.'],'search-index':['Search Index','Makes products quick to find.'],'media-metadata':['Media Metadata','Manages product-media descriptions and ordering.'],
           'order-service':['Order Service','Creates and tracks every order.'],'cart-service':['Shopping Cart','Temporarily holds selected products.'],'checkout-service':['Checkout Service','Coordinates pricing, inventory, and payment.'],'order-history':['Order History','Provides past orders and status queries.'],
           'payment-service':['Payment Service','Coordinates cards and alternative payments.'],'fraud-service':['Risk Detection','Detects suspicious transactions in real time.'],'refund-service':['Refund Service','Processes refunds to the original method.'],'ledger-service':['Transaction Ledger','Keeps auditable payment records.'],
-          'inventory-service':['Inventory Service','Reports available stock by location.'],'reservation-service':['Stock Reservation','Temporarily locks items during checkout.'],'warehouse-service':['Warehouse Service','Coordinates picking and warehouse operations.'],'stock-event':['Inventory Events','Publishes replenishment and stock changes.'],
-          'delivery-service':['Delivery Service','Creates delivery jobs and tracks status.'],'route-planner':['Route Planner','Calculates efficient delivery routes.'],'carrier-adapter':['Carrier Adapter','Connects the formats of different carriers.'],'tracking-service':['Parcel Tracking','Reports parcel location and progress.'],
+          'traffic-policy':['Traffic Policy','Defines rate-limit rules by client, path, and plan.'],'quota-service':['Quota Service','Tracks the daily usage quota of each API key.'],'circuit-breaker':['Circuit Breaker','Pauses forwarding when downstream fails, then recovers automatically.'],'throttle-event':['Throttle Events','Publishes over-limit, block, and release events.'],
+          'discovery-service':['Discovery Service','Resolves available instances by name, version, and region.'],'health-checker':['Health Checker','Probes instances and removes unhealthy nodes.'],'config-center':['Config Center','Publishes service settings and feature flags centrally.'],'service-mesh':['Service Mesh','Handles encryption, retries, and traffic splitting between services.'],
           'notification-service':['Notification Center','Chooses when and how to notify.'],'email-service':['Email Service','Sends transactional and campaign emails.'],'sms-service':['SMS Service','Sends alerts and verification codes.'],'push-service':['Push Service','Sends updates to phones and browsers.'],
           'event-collector':['Event Collector','Receives behavior events from every system.'],'stream-processor':['Stream Processor','Processes continuous data in real time.'],'report-service':['Report Service','Produces operational metrics and trend reports.'],'feature-store':['Feature Store','Stores shared analytics and model features.'],
           'config-service':['Configuration Center','Provides centralized environment configuration.'],'service-registry':['Service Registry','Records available locations for each service.'],scheduler:['Scheduler','Starts routine background work on time.'],'secret-service':['Secret Vault','Securely provides keys and sensitive settings.'],'deployment-service':['Deployment Control','Coordinates releases and rollbacks.'],
           'metrics-service':['Metrics Center','Aggregates latency, traffic, and error rates.'],'log-service':['Log Center','Stores service operating records.'],'trace-service':['Distributed Tracing','Connects every service in a request journey.'],'alert-service':['Alert Service','Notifies operators when anomalies occur.'],'health-service':['Health Checks','Continuously verifies service responses.']
         },
-        flows:{browse:['Browse products','Product query','Query packet','Core'],login:['Member sign-in','Credentials','Validation packet','Critical'],checkout:['Submit checkout','Cart snapshot','Checkout packet','Critical'],charge:['Authorize charge','Payment authorization','Payment packet','Critical'],reserve:['Reserve stock','Inventory reservation event','Inventory event','Core'],dispatch:['Create delivery','Shipment job','Delivery event','General'],notify:['Transaction notification','Notification content','Message event','General'],telemetry:['Telemetry data','Trace and metrics batch','Telemetry packet','Observability'],'batch-report':['Accounting report batch','Aggregated accounting events','Report batch packet','Batch'],'mq-replay':['Message queue replay','Pending message batch','Queue packet','Batch']},
+        flows:{browse:['Browse products','Product query','Query packet','Core'],login:['Member sign-in','Credentials','Validation packet','Critical'],checkout:['Submit checkout','Cart snapshot','Checkout packet','Critical'],charge:['Authorize charge','Payment authorization','Payment packet','Critical'],quota:['Quota check','API key and usage','Quota packet','Core'],discover:['Service lookup','Service name and version','Lookup packet','General'],notify:['Transaction notification','Notification content','Message event','General'],telemetry:['Telemetry data','Trace and metrics batch','Telemetry packet','Observability'],'batch-report':['Accounting report batch','Aggregated accounting events','Report batch packet','Batch'],'mq-replay':['Message queue replay','Pending message batch','Queue packet','Batch']},
         periods:{dawn:'Dawn',morning:'Morning',noon:'Noon',afternoon:'Afternoon',sunset:'Sunset',evening:'Evening',midnight:'Late night',predawn:'Before dawn'}
       }
     };
@@ -588,9 +642,10 @@
       const rng = mulberry32(seed);
       const artRng = mulberry32(DATA.artDirection.seed);
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x87bac8, 0.0058);
+      scene.fog = new THREE.FogExp2(0xc9d8c8, 0.0058);
       const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
-      camera.position.set(68, 66, 82);
+      const overviewData=DATA.stage3.overview;
+      camera.position.set(...overviewData.target).add(new THREE.Vector3(...overviewData.direction).normalize().multiplyScalar(innerWidth/innerHeight<.9?overviewData.narrowDistance:overviewData.wideDistance));
 
       renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth <= DATA.stage5.mobileBreakpoint ? DATA.stage5.mobilePixelRatio : 2));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -607,11 +662,11 @@
       container.appendChild(labelRenderer.domElement);
 
       const controls = new OrbitControls(camera, renderer.domElement);
-      controls.target.set(0, 0, -2);
+      controls.target.set(...overviewData.target);
       controls.enableDamping = !reducedMotion;
       controls.dampingFactor = 0.055;
       controls.minDistance = 18;
-      controls.maxDistance = 180;
+      controls.maxDistance = overviewData.maxDistance;
       controls.maxPolarAngle = Math.PI * 0.465;
       const defaultMaxPolarAngle=controls.maxPolarAngle;
       const overviewDirection=camera.position.clone().sub(controls.target).normalize();
@@ -701,6 +756,7 @@
       const nightMaterials = [];
       const silhouetteMaterials = [];
       let cloudField = null;
+      let carField = null;
       let cloudMaterial = null;
       let stage2DrawCalls = 0;
 
@@ -753,7 +809,9 @@
       statusMessage.textContent = '組裝服務建物、街道家具與背景地形…';
       buildServiceModels();
       buildIslandFurniture();
+      buildIslandDensity();
       buildEnvironment();
+      createCars();
       instantiatePartLibrary();
 
       function createIsland(group, domain, vertices, index) {
@@ -1217,6 +1275,111 @@
         });
       }
 
+      // Fills free rim and path-band space with toy houses, bushes and parasols, keeping clear of roads and existing furniture.
+      function buildIslandDensity(){
+        const cfg=DATA.artDirection.density,p=DATA.palette,densityRng=mulberry32(cfg.seed);
+        const segDist=(px,pz,ax,az,bx,bz)=>{const dx=bx-ax,dz=bz-az,t=THREE.MathUtils.clamp(((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz||1),0,1);return Math.hypot(px-ax-dx*t,pz-az-dz*t);};
+        const polyDist=(x,z,poly)=>{let d=Infinity;poly.forEach((a,i)=>{const b=poly[(i+1)%poly.length];d=Math.min(d,segDist(x,z,a.x,a.y,b.x,b.y));});return d;};
+        const side=(x,z,poly,sign)=>poly.every((a,i)=>{const b=poly[(i+1)%poly.length];return sign*((b.x-a.x)*(z-a.y)-(b.y-a.y)*(x-a.x))>=0;});
+        const inside=(x,z,poly)=>side(x,z,poly,1)||side(x,z,poly,-1);
+        DATA.domains.forEach(domain=>{
+          const island=islandById.get(domain.id),{center:c,vertices:verts}=island;
+          const art=domain.id===DATA.artDirection.showcase.domainId?DATA.artDirection.showcase:DATA.artDirection.islandThemes[domain.id];
+          const curb=verts.map(v=>v.clone().multiplyScalar(cfg.curbScale)),plaza=verts.map(v=>v.clone().multiplyScalar(cfg.plazaScale));
+          const roads=[];
+          for(let i=0;i<6;i++){const ring=roadGraph.get(`${domain.id}:ring:${i}`);ring.links.forEach(id=>{const other=roadGraph.get(id);if(id.startsWith(`${domain.id}:`))roads.push([ring.position.x-c.x,ring.position.z-c.z,other.position.x-c.x,other.position.z-c.z]);});}
+          const obstacles=[];
+          domain.services.forEach((service,index)=>{const pos=servicePositions.get(service.id);obstacles.push([pos.x-c.x,pos.z-c.z,index===0?2.1:1.25]);});
+          (art.trees||art.treeClusters).forEach(([x,z])=>obstacles.push([x,z,.95]));
+          (art.beds||art.flowerBeds).forEach(([x,z])=>obstacles.push([x,z,.62]));
+          if(art.nearCabinets)[-1,1].forEach(dir=>obstacles.push([dir*3.4,.25,.5]));
+          verts.forEach((a,i)=>{const b=verts[(i+1)%6];[1,2].forEach(j=>obstacles.push([THREE.MathUtils.lerp(a.x,b.x,j/3)*.94,THREE.MathUtils.lerp(a.y,b.y,j/3)*.94,.2]));});
+          const candidates=[];
+          for(let x=-ISLAND_RADIUS;x<=ISLAND_RADIUS;x+=cfg.gridStep)for(let z=-ISLAND_RADIUS;z<=ISLAND_RADIUS;z+=cfg.gridStep)candidates.push([x+(densityRng()-.5)*cfg.gridStep*.6,z+(densityRng()-.5)*cfg.gridStep*.6,densityRng()]);
+          candidates.sort((a,b)=>a[2]-b[2]);
+          const lawns=[];
+          candidates.forEach(([x,z])=>{
+            const r=cfg.lawn.radius;
+            if(lawns.length>=cfg.lawn.max||!inside(x,z,curb)||polyDist(x,z,curb)<r*.9||inside(x,z,plaza)||polyDist(x,z,plaza)<.25
+              ||roads.some(([ax,az,bx,bz])=>segDist(x,z,ax,az,bx,bz)<r*.8+.35)||lawns.some(([ox,oz])=>Math.hypot(x-ox,z-oz)<r*1.8))return;
+            lawns.push([x,z]);
+            addPart('static','cylinder',[c.x+x,.445,c.z+z],[r*2.2,.03,r*1.7],cfg.lawn.colors[lawns.length%cfg.lawn.colors.length],null,[0,densityRng()*Math.PI,0]);
+          });
+          const placed=[],counts={house:0,bush:0,parasol:0};
+          const fits=(x,z,r)=>inside(x,z,verts)&&polyDist(x,z,verts)>=r+cfg.edgeMargin&&!inside(x,z,plaza)&&polyDist(x,z,curb)>=r+.1
+            &&roads.every(([ax,az,bx,bz])=>segDist(x,z,ax,az,bx,bz)>=r+cfg.roadClearance)&&obstacles.every(([ox,oz,or])=>Math.hypot(x-ox,z-oz)>=r+or)
+            &&placed.every(([ox,oz,or])=>Math.hypot(x-ox,z-oz)>=r+or+cfg.spacing);
+          candidates.forEach(([x,z])=>{
+            const rim=!inside(x,z,curb),kind=rim?'house':counts.bush<cfg.bush.max?'bush':'parasol',spec=cfg[kind];
+            if(counts[kind]>=spec.max||!fits(x,z,spec.radius))return;
+            placed.push([x,z,spec.radius]);counts[kind]++;
+            const wx=c.x+x,wz=c.z+z,pick=list=>list[Math.floor(densityRng()*list.length)];
+            if(kind==='house'){
+              const yaw=Math.atan2(-x,-z),w=1+densityRng()*.18,h=.66+densityRng()*.24,d=.7+densityRng()*.08,fx=Math.sin(yaw),fz=Math.cos(yaw),wall=pick(cfg.house.walls);
+              let top=.35+h;
+              addPart('static','rbox',[wx,.35+h/2,wz],[w,h,d],wall,null,[0,yaw,0]);
+              if(densityRng()<cfg.house.twoStoryChance){addPart('static','rbox',[wx,top+.22,wz],[w*.72,.44,d*.86],wall,null,[0,yaw,0]);top+=.44;}
+              addPart('static','prism',[wx,top+.14,wz],[w/.866*1.1,d*1.14,.56],pick(cfg.house.roofs),null,[-Math.PI/2,yaw,0,'YXZ']);
+              addPart('static','rbox',[wx+fx*(d/2+.01),.5,wz+fz*(d/2+.01)],[.18,.3,.04],p.trunk,null,[0,yaw,0]);
+              [-1,1].forEach(dir=>addPart('glow','glowbox',[wx+fx*(d/2+.02)+fz*.27*dir,.35+h*.6,wz+fz*(d/2+.02)-fx*.27*dir],[.2,.2,.03],p.lamp,null,[0,yaw,0]));
+            }else if(kind==='bush'){
+              addPart('static','sphere',[wx,.64,wz],[.86,.7,.86],art.foliage||p.leaf);
+              addPart('static','sphere',[wx+.36,.56,wz+.16],[.58,.48,.58],p.darkLeaf);
+              if(densityRng()<.5)addPart('static','sphere',[wx-.12,.72,wz-.06],[.1,.09,.1],p.flower);
+            }else{
+              addPart('static','cylinder',[wx,.73,wz],[.05,.76,.05],p.darkStone);
+              addPart('static','cone',[wx,1.17,wz],[.92,.3,.92],pick(cfg.parasol.canopies));
+              addPart('static','cylinder',[wx,.55,wz],[.42,.04,.42],p.warmCream);
+            }
+          });
+        });
+      }
+
+      // Decorative toy cars drive the road graph so the overview feels busy; they carry no traffic data and are not pickable.
+      function createCars(){
+        const cfg=DATA.ambient.cars,carRng=mulberry32(cfg.seed),count=innerWidth<=DATA.stage5.mobileBreakpoint?cfg.mobileCount:cfg.desktopCount;
+        const nodes=[...roadGraph.values()].filter(node=>node.links.size),islandOf=id=>id.split(':')[0];
+        const shaped=(sx,sy,sz,y,z=0)=>{const geometry=makeRoundedBoxGeometry();geometry.scale(sx,sy,sz);geometry.translate(0,y,z);return geometry;};
+        const meshes=[
+          new THREE.InstancedMesh(shaped(.5,.24,.92,.24),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.7}),count),
+          new THREE.InstancedMesh(shaped(.42,.2,.5,.44,-.06),new THREE.MeshStandardMaterial({color:cfg.cabin,roughness:.5}),count),
+          new THREE.InstancedMesh(shaped(.54,.14,.74,.09),new THREE.MeshStandardMaterial({color:cfg.wheels,roughness:.95}),count)
+        ];
+        const cars=Array.from({length:count},(_,i)=>{
+          const from=nodes[Math.floor(carRng()*nodes.length)],links=[...from.links];
+          meshes[0].setColorAt(i,new THREE.Color(cfg.colors[i%cfg.colors.length]));
+          return{from,to:roadGraph.get(links[Math.floor(carRng()*links.length)]),t:carRng(),speed:THREE.MathUtils.lerp(...cfg.speed,carRng()),
+            side:THREE.MathUtils.lerp(...cfg.lateral,carRng()),phase:carRng()*Math.PI*2,scale:THREE.MathUtils.lerp(...cfg.scale,carRng()),x:null,z:null,yaw:0};
+        });
+        const matrix=new THREE.Matrix4(),euler=new THREE.Euler(),quat=new THREE.Quaternion(),pos=new THREE.Vector3(),scl=new THREE.Vector3();
+        let viewScale=1;
+        // Smoothing keeps corners from snapping when the lane offset and heading change at a node.
+        const place=(car,i,delta=0)=>{
+          const a=car.from.position,b=car.to.position,dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz)||1,onBridge=islandOf(car.from.id)!==islandOf(car.to.id);
+          const x=a.x+dx*car.t-dz/len*car.side,z=a.z+dz*car.t+dx/len*car.side,yaw=Math.atan2(dx,dz),k=car.x===null?1:Math.min(1,delta*cfg.turnRate);
+          car.x=car.x===null?x:THREE.MathUtils.lerp(car.x,x,k);car.z=car.z===null?z:THREE.MathUtils.lerp(car.z,z,k);
+          car.yaw+=Math.atan2(Math.sin(yaw-car.yaw),Math.cos(yaw-car.yaw))*(delta?k:1);
+          pos.set(car.x,(onBridge?cfg.bridgeY:cfg.groundY)+Math.sin(car.phase)*cfg.bob,car.z);
+          quat.setFromEuler(euler.set(0,car.yaw,0));scl.setScalar(car.scale*viewScale);
+          matrix.compose(pos,quat,scl);meshes.forEach(mesh=>mesh.setMatrixAt(i,matrix));
+        };
+        cars.forEach(car=>{car.yaw=Math.atan2(car.to.position.x-car.from.position.x,car.to.position.z-car.from.position.z);});
+        cars.forEach((car,i)=>place(car,i));
+        meshes.forEach(mesh=>{mesh.frustumCulled=false;mesh.castShadow=false;mesh.receiveShadow=false;scene.add(mesh);});
+        const flush=()=>meshes.forEach(mesh=>mesh.instanceMatrix.needsUpdate=true);
+        carField={count,
+          // Far cameras enlarge the cars so the traffic still reads in the overview.
+          setViewDistance(distance){const {near,far,max}=cfg.distanceScale,next=THREE.MathUtils.lerp(1,max,THREE.MathUtils.smoothstep(distance,near,far));if(Math.abs(next-viewScale)<.02)return;viewScale=next;cars.forEach((car,i)=>place(car,i));flush();},
+          update(delta){
+            cars.forEach((car,i)=>{
+              car.t+=car.speed*delta/(car.from.position.distanceTo(car.to.position)||1);car.phase+=delta*cfg.idleRate;
+              if(car.t>=1){const options=[...car.to.links].filter(id=>id!==car.from.id),next=options.length?options[Math.floor(carRng()*options.length)]:car.from.id;car.from=car.to;car.to=roadGraph.get(next);car.t=0;}
+              place(car,i,delta);
+            });
+            flush();
+          }};
+      }
+
       function buildGatewayPlaza(island){
         const {center:c,vertices:verts}=island,p=DATA.palette,art=DATA.artDirection.showcase;
         const placed=(kind,x,y,z,sx,sy,sz,color,rotation=[0,0,0],bucket='static')=>addPart(bucket,kind,[c.x+x,y,c.z+z],[sx,sy,sz],color,null,rotation);
@@ -1433,6 +1596,32 @@
           } else {
             addPart('static','rbox',[x,-.78,z],[2.3*s,.38*s,.78*s],DATA.palette.cream); addPart('static','box',[x,-.30,z],[.72*s,.54*s,.62*s],DATA.palette.coral);
             addPart('static','cylinder',[x+.25,.55,z],[.05*s,1.05*s,.05*s],DATA.palette.darkStone);
+          }
+        });
+
+        const scatter=env.marineScatter,marineRng=mulberry32(scatter.seed),spots=env.marine.map(item=>[...item.position]);
+        Object.entries(scatter.counts).forEach(([kind,count])=>{
+          for(let placedCount=0,tries=0;placedCount<count&&tries<count*80;tries++){
+            const radius=THREE.MathUtils.lerp(...scatter.radius,marineRng()),angle=marineRng()*Math.PI*2,x=Math.cos(angle)*radius,z=Math.sin(angle)*radius;
+            if(terrainHeight(x,z)>scatter.waterDepth||islandCenters.some(c=>Math.hypot(c.x-x,c.z-z)<scatter.islandClearance)||spots.some(([sx,sz])=>Math.hypot(sx-x,sz-z)<scatter.spacing))continue;
+            spots.push([x,z]);placedCount++;
+            const yaw=marineRng()*Math.PI*2,fx=Math.sin(yaw),fz=Math.cos(yaw),pick=list=>list[Math.floor(marineRng()*list.length)];
+            if(kind==='sailboat'){
+              addPart('static','rbox',[x,-1.1,z],[1.0,.42,2.5],pick(scatter.hulls),null,[0,yaw,0]);
+              addPart('static','rbox',[x,-.86,z],[.8,.1,1.8],DATA.palette.clay,null,[0,yaw,0]);
+              addPart('static','cylinder',[x,.31,z],[.07,2.4,.07],DATA.palette.darkStone);
+              addPart('static','prism',[x,-.22,z],[1.5,.05,2.2],pick(scatter.sails),null,[-Math.PI/2,yaw-Math.PI/2,0,'YXZ']);
+            }else if(kind==='sandbar'){
+              const s=.8+marineRng()*.6;
+              addPart('static','ico',[x,-1.3,z],[3.2*s,.5,2.3*s],scatter.sand,null,[0,yaw,0]);
+              addPart('static','sphere',[x+fx*.4,-.95,z+fz*.4],[1.3*s,.35,1.0*s],DATA.palette.leaf);
+              addPart('static','cylinder',[x-fx*.3,-.55,z-fz*.3],[.12,.9,.12],DATA.palette.trunk);
+              addPart('static','sphere',[x-fx*.3,.05,z-fz*.3],[.8,.65,.8],DATA.palette.darkLeaf);
+            }else{
+              addPart('static','cylinder',[x,-1.08,z],[.34,.42,.34],DATA.palette.coral);
+              addPart('static','sphere',[x,-.82,z],[.24,.22,.24],'#fff8f4');
+              addPart('glow','glowsphere',[x,-.68,z],[.12,.12,.12],DATA.palette.lamp);
+            }
           }
         });
 
@@ -1674,10 +1863,10 @@
       function openDetail(){if(isMobileLayout())closeMobileOverlays('detail');ui.detail.classList.add('is-open');if(isMobileLayout())toggleCatalog(false);lastCollisionCheck=0;needsRender=true;}
 
       function renderServiceThumbnail(serviceId,canvas){
-        const refs=serviceInstances.get(serviceId);if(!refs||!canvas)return;const size=160,previewScene=new THREE.Scene();previewScene.background=new THREE.Color('#cbd9d0');const previewCamera=new THREE.PerspectiveCamera(34,1,.1,30);previewCamera.position.set(4.1,3.3,5.2);previewCamera.lookAt(0,1,0);previewScene.add(new THREE.HemisphereLight(0xffffff,0x50635c,1.4));const key=new THREE.DirectionalLight(0xfff0d5,2.2);key.position.set(4,7,5);previewScene.add(key);
+        const refs=serviceInstances.get(serviceId);if(!refs||!canvas)return;const size=160,previewScene=new THREE.Scene();previewScene.background=new THREE.Color('#f4ece4');const previewCamera=new THREE.PerspectiveCamera(34,1,.1,30);previewCamera.position.set(4.1,3.3,5.2);previewCamera.lookAt(0,1,0);previewScene.add(new THREE.HemisphereLight(0xffffff,0x50635c,1.4));const key=new THREE.DirectionalLight(0xfff0d5,2.2);key.position.set(4,7,5);previewScene.add(key);
         const origin=servicePositions.get(serviceId),matrix=new THREE.Matrix4(),position=new THREE.Vector3(),quaternion=new THREE.Quaternion(),scale=new THREE.Vector3();refs.forEach(ref=>{ref.mesh.getMatrixAt(ref.instanceIndex,matrix);matrix.decompose(position,quaternion,scale);position.sub(origin);const material=new THREE.MeshStandardMaterial({color:ref.originalColor,roughness:.8,emissive:ref.kind.startsWith('glow')?ref.originalColor:0x000000,emissiveIntensity:ref.kind.startsWith('glow')?.8:0,transparent:ref.kind.startsWith('glow'),opacity:ref.kind.startsWith('glow')?.85:1});const mesh=new THREE.Mesh(ref.mesh.geometry,material);mesh.position.copy(position);mesh.quaternion.copy(quaternion);mesh.scale.copy(scale);previewScene.add(mesh);});
         previewTarget??=new THREE.WebGLRenderTarget(size,size,{depthBuffer:true});const oldTarget=renderer.getRenderTarget(),oldViewport=renderer.getViewport(new THREE.Vector4()),oldScissor=renderer.getScissor(new THREE.Vector4()),oldScissorTest=renderer.getScissorTest(),oldClear=renderer.getClearColor(new THREE.Color()).clone(),oldAlpha=renderer.getClearAlpha(),oldAutoClear=renderer.autoClear;
-        renderer.setRenderTarget(previewTarget);renderer.setViewport(0,0,size,size);renderer.setScissorTest(false);renderer.setClearColor('#cbd9d0',1);renderer.autoClear=true;renderer.clear();renderer.render(previewScene,previewCamera);const pixels=new Uint8Array(size*size*4);renderer.readRenderTargetPixels(previewTarget,0,0,size,size,pixels);renderer.setRenderTarget(oldTarget);renderer.setViewport(oldViewport);renderer.setScissor(oldScissor);renderer.setScissorTest(oldScissorTest);renderer.setClearColor(oldClear,oldAlpha);renderer.autoClear=oldAutoClear;
+        renderer.setRenderTarget(previewTarget);renderer.setViewport(0,0,size,size);renderer.setScissorTest(false);renderer.setClearColor('#f4ece4',1);renderer.autoClear=true;renderer.clear();renderer.render(previewScene,previewCamera);const pixels=new Uint8Array(size*size*4);renderer.readRenderTargetPixels(previewTarget,0,0,size,size,pixels);renderer.setRenderTarget(oldTarget);renderer.setViewport(oldViewport);renderer.setScissor(oldScissor);renderer.setScissorTest(oldScissorTest);renderer.setClearColor(oldClear,oldAlpha);renderer.autoClear=oldAutoClear;
         const context=canvas.getContext('2d'),image=context.createImageData(size,size);for(let y=0;y<size;y++)image.data.set(pixels.subarray((size-1-y)*size*4,(size-y)*size*4),y*size*4);context.putImageData(image,0,0);previewScene.traverse(object=>{if(object.isMesh)object.material.dispose();});
       }
 
@@ -1798,6 +1987,7 @@
         get stage2InstancedDrawCalls(){ return stage2DrawCalls; },
         get rendererInfo(){ return renderer.info.render; },get rendererMemory(){return{...renderer.info.memory};},get renderedFrames(){return renderedFrames;},get language(){return UI_LANG;},get simulatedMinutes(){return simulatedMinutes;},get reducedMotion(){return reducedMotion;},
         getSceneStats(){const stats={objects:0,meshes:0,instancedMeshes:0,geometries:new Set(),materials:new Set(),textures:new Set()};scene.traverse(object=>{stats.objects++;if(object.isMesh){stats.meshes++;if(object.isInstancedMesh)stats.instancedMeshes++;if(object.geometry)stats.geometries.add(object.geometry.uuid);const materials=Array.isArray(object.material)?object.material:[object.material];materials.filter(Boolean).forEach(material=>{stats.materials.add(material.uuid);Object.values(material).forEach(value=>{if(value?.isTexture)stats.textures.add(value.uuid);});});}});return{objects:stats.objects,meshes:stats.meshes,instancedMeshes:stats.instancedMeshes,geometries:stats.geometries.size,materials:stats.materials.size,textures:stats.textures.size};},
+        get carCount(){return carField?.count??0;},
         get cameraFlightActive(){return Boolean(cameraFlight);},get birdView(){return birdView;},get paused(){return isPaused||reducedMotion;},
         get stage4State(){return{labelsOn,packetsOn,apiLinesOn,logsOn,validRoutes:flowRoutes.size,walkers:walkers.length,activeWalkers:walkers.filter(walker=>walker.active).length,activeByFlow:Object.fromEntries([...flowRuntime].map(([id,runtime])=>[id,runtime.walkers.filter(walker=>walker.active).length])),queued:walkers.filter(walker=>walker.state==='queued').length,logs:logEntries.length,visibleLines:[...flowMeshes.values()].filter(mesh=>mesh.visible).length,visibleBadges:walkers.filter(walker=>walker.badge.visible).length,visibleLabels:walkers.filter(walker=>walker.label.object.visible).length,packetMeshesVisible:walkerMeshes?.all.every(mesh=>mesh.visible)??false};},
         getCameraState(){return{position:camera.position.toArray(),target:controls.target.toArray(),maxPolarAngle:controls.maxPolarAngle};},
@@ -1846,7 +2036,7 @@
 
       const resize = () => {
         const width=Math.max(1,container.clientWidth), height=Math.max(1,container.clientHeight);
-        camera.aspect=width/height; camera.updateProjectionMatrix();
+        camera.aspect=width/height; if(camera.view?.enabled)camera.setViewOffset(width,height,0,camera.view.offsetY,width,height); else camera.updateProjectionMatrix();
         renderer.setPixelRatio(Math.min(devicePixelRatio, width<=DATA.stage5.mobileBreakpoint?DATA.stage5.mobilePixelRatio:2));
         renderer.setSize(width,height,false); labelRenderer.setSize(width,height);
         needsRender=true;lastCollisionCheck=0;
@@ -1854,6 +2044,10 @@
       const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(container); resize();
       const onMotionChange = event => { reducedMotion=event.matches; controls.enableDamping=!reducedMotion; flowMeshes.forEach(mesh=>mesh.material.uniforms.uThreshold.value=reducedMotion?.52:mesh.userData.baseThreshold);if(reducedMotion){waterUniforms.uTime.value=0;cancelCameraFlight();} updatePauseButton();updateLiveState();needsRender=true; };
       reducedQuery.addEventListener?.('change',onMotionChange);
+
+      let viewShift=0;
+      function sheetObstruction(){if(!isMobileLayout())return 0;const panel=ui.detail.classList.contains('is-open')?ui.detail:ui.catalog.classList.contains('is-open')?ui.catalog:null;if(!panel)return 0;const cap=innerHeight*(panel===ui.detail?DATA.stage5.detailHeight:DATA.stage5.catalogHeight)/100;return THREE.MathUtils.clamp(innerHeight-panel.getBoundingClientRect().top,0,cap);}
+      function updateViewShift(delta){const target=sheetObstruction()*DATA.stage5.sheetViewShift;if(Math.abs(target-viewShift)<.5&&(target>0)===Boolean(camera.view?.enabled))return;viewShift=reducedMotion||Math.abs(target-viewShift)<.5?target:THREE.MathUtils.lerp(viewShift,target,Math.min(1,delta*10));const width=Math.max(1,container.clientWidth),height=Math.max(1,container.clientHeight);if(viewShift>=.5)camera.setViewOffset(width,height,0,viewShift,width,height);else camera.clearViewOffset();needsRender=true;lastCollisionCheck=0;}
 
       statusEl.classList.add('is-hidden');
       syncResponsivePanels();
@@ -1866,6 +2060,7 @@
           simulatedMinutes=(simulatedMinutes+delta*daySpeed)%1440;
           waterUniforms.uTime.value+=delta;
           cloudField?.update(delta);
+          carField?.update(delta);
           flowPatternTime+=delta;
           flowMeshes.forEach(mesh=>mesh.material.uniforms.uTime.value=flowPatternTime);
           updateTrafficLaunches(delta);
@@ -1876,11 +2071,13 @@
           needsRender=true;
         }
         updateCameraFlight(now);
+        updateViewShift(delta);
         const controlsChanged=controls.enableDamping?controls.update():false;
         if(cameraFlight||controlsChanged)needsRender=true;
         renderLogs(now);
         if(!needsRender)return;
         const cameraDistance=camera.position.distanceTo(controls.target);
+        carField?.setViewDistance(cameraDistance);
         nearMeshes.forEach(mesh=>mesh.visible=cameraDistance<DATA.stage2.smallPropHideDistance);
         updatePacketVisibility();
         renderer.render(scene,camera); labelRenderer.render(scene,camera);renderedFrames++;

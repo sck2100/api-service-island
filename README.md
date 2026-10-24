@@ -36,8 +36,15 @@ api-service-island/
 ├─ index.four-islands-approved.bak # 本輪全城擴展前備份
 ├─ index.before-environment-art.bak # 海水與遠山調整前備份
 ├─ index.before-traffic-art.bak # 流量節奏調整前備份
+├─ index.before-heart-style.bak # 暖紙 UI 與鏡頭調整前備份
+├─ index.before-density-marine.bak # 島上密度與海上點綴前備份
+├─ index.before-polish.bak # 手機詳細卡排版與夜間窗光前備份
+├─ index.before-api-domains.bak # 兩座網域改為 API 主題前備份
+├─ index.before-pedestrians.bak # 加入行人前備份
+├─ index.before-cars.bak # 行人改為小汽車前備份
 ├─ art-review/ # 本輪同條件前後對照與逐島近景；應用程式不載入
 ├─ env-review/ # 環境美術調整前後的日間、夜間及手機截圖；應用程式不載入
+├─ heart-review/ # 暖紙 UI 與鏡頭調整前後截圖；應用程式不載入
 ├─ traffic-review/ # 三時段、入口排隊截圖與約 15 秒動態預覽；應用程式不載入
 ├─ README.md    # 使用、進度與驗證紀錄
 └─ SPEC.md      # 目標規格與驗收標準
@@ -91,8 +98,8 @@ api-service-island/
 | 入口閘道、身分驗證、訂單交易、支付清算 | 保留已確認成果 | 玩具城門、鎖盾、帳務厚圓柱、加密保險箱 |
 | 客戶中心 | 本輪完成 | 圓頂庭院服務廳與兩側小翼 |
 | 商品目錄 | 本輪完成 | 暖色市集櫃台與層疊貨架冠部 |
-| 庫存調度 | 本輪完成 | 三格厚實倉儲積木與橫向屋簷 |
-| 物流配送 | 本輪完成 | 矮胖配送驛站、包裹標誌與側邊裝卸台 |
+| 流量管控（原庫存調度） | 本輪完成 | 三格厚實倉儲積木與橫向屋簷 |
+| 服務註冊與發現（原物流配送） | 本輪完成 | 矮胖配送驛站、包裹標誌與側邊裝卸台 |
 | 訊息通知 | 本輪完成 | 粉霧屋頂、信封正面與鐘鈴冠部 |
 | 數據分析 | 本輪完成 | 觀測圓柱、環帶、圓頂與前方圖表窗 |
 | 平台維運 | 本輪完成 | 雙側控制塔、平頂主廳與短訊號塔 |
@@ -129,6 +136,52 @@ api-service-island/
 瀏覽器實測（2026-10-24，Edge Headless `155.0.4283.62`、1440×900／DPR 1；手機 390×844／模擬 DPR 3）：開盤 `browse/login` 各 10／8 個活躍封包，結帳 `checkout/charge/batch-report` 為 7／6／6，夜間 `notify/batch-report/mq-replay` 為 7／8／7，安靜區域僅 1～2 個；10 條路線均有效，沒有 route error 或 Console error／warning。夜間 4.2 秒觀察內排隊峰值為 2；實際選到等待中的封包，卡片顯示「等待處理」。15 秒同鏡頭錄影期間活躍封包 `24 → 40`，日誌 `4 → 5`，未暴增。暫停與 reduced-motion 各觀察 0.7～0.8 秒，時鐘、日誌及 render frame 計數均不變。手機 pixelRatio 上限仍為 `1.4`。
 
 同條件全景 `renderer.info.render.calls`：原版本封包／連線皆關 `173`、皆開 `187`；本輪為 `174`／`192`，預設封包開、連線關為 `182`。增加來自共用入口燈、封包輪廓與兩條有效連線，未隨請求新建 Mesh／材質／貼圖。影片與截圖為桌面 Headless 錄製，不代表實體手機 FPS、色彩或長時間負載。前述各階段的 `8 flow／64 封包` 數字為當時歷史驗證快照；**目前交付以本節的 `10 flow／79 封包池` 為準**。
+
+## 暖紙 UI 與鏡頭調整
+
+- 介面改為淺色暖紙風格：cream `#fff8f4` 面板、墨色 `#211d1d` 文字、coral `#db6a41` 小標與重點、yellow `#fcea8b` hover；按鈕改膠囊形，主要按鈕為墨底加 coral 外框。樣式集中在 `<style>` 中的「Warm paper UI skin」區塊，只覆寫顏色與字體，不改版面與互動。
+- 字體優先使用本機已安裝的 Noto Sans TC，其次 PingFang TC／微軟正黑體；未載入外部字型。
+- 預設鏡頭改為較近、較俯視（約 52°），全景距離 `118 → 96`、直式 `146 → 140`，最大縮放距離 `180 → 140`，全景中心略往右移，避開右側清單；設定集中在 `DATA.stage3.overview`。
+- 海水改深 teal、岸邊淺水與泡沫加亮；盆地、遠山與背景樹改為較飽和的黃綠；日間天空與霧改暖。夜間 keyframes 未改。
+- 修正既有問題：CSS2D 名牌的 z-index 會蓋過操作面板，現在 `#scene` 自成堆疊層。
+- 對照截圖：`heart-review/before-*.png`／`after-*.png`（日間、夜間、教學、詳細卡、日誌、手機）。
+
+瀏覽器實測（2026-10-24，Edge Headless，1440×900／DPR 1 與 390×844／模擬 DPR 3，reduced-motion 固定時間）：初始化、教學、服務選取、日誌與手機 sheet 均正常；Console 無 error／warning。手機版（≤800px）品牌卡改為單列膠囊：標題過長時以省略號截斷，三個工具鈕只顯示圖示（保留 aria-label 與隱藏文字），高度由約 190px 降為約 54px。手機鏡頭：開啟底部清單或詳細資料 sheet 時，以 `camera.setViewOffset` 把投影中心上移到可見區中央（位移量 = sheet 實際露出高度 × `DATA.stage5.sheetViewShift`，上限為預設 sheet 高度，展開到全螢幕時不會再推），關閉 sheet 後平滑回到中央；reduced-motion 時直接切換。相機位置與 target 不變，raycast、CSS2D 名牌與 `projectService` 均使用同一投影矩陣。直式全景距離 `140 → 150`。實測 390×844：清單開啟時以投影座標實際點擊訂單服務可正確選取；對照圖 `heart-review/after-m-catalog.png`、`after-m-detail.png`、`after-m-closed.png`。
+
+### 島上密度與海上點綴
+
+- 新增 `buildIslandDensity()`：每島以固定種子在網格候選點上做碰撞過濾，自動避開島內路網（環路與通往橋口的支線）、服務建物、既有樹木／花圃／機櫃、邊緣燈與中央廣場，再放置：curb 外側島緣的玩具小屋（gable 屋頂、門、夜間窗光，35% 雙層，每島最多 12 棟）、curb 內側的草坪（最多 6 塊）、灌木（最多 6 叢）與陽傘（最多 2 把）。參數集中在 `DATA.artDirection.density`。
+- 新增海上點綴：`DATA.environment.marineScatter` 以固定種子在潟湖水域（地形高度低於 `waterDepth`、距島心 ≥ 12.5）散佈 10 艘帆船、5 座沙洲（含小樹）與 7 個浮標（夜間有燈）；原有 3 個海上物件保留。
+- 全部經 `addPart`／既有 InstancedMesh 零件庫，沒有新增 Mesh 或材質；不影響服務 id、路網、橋梁、封包路線或選取。
+
+驗證（2026-10-24，Edge Headless，1440×900／DPR 1，12:00 全景，與 `index.before-density-marine.bak` 同條件比較）：draw calls 預設 `182 → 182`、封包與連線皆關 `174 → 174`、皆開 `192 → 192`；靜態零件批次 `13 → 13`；有效路線 `10`、封包池 `79` 不變；三角形約 `41.8 萬 → 47.7 萬`（+14%）。Console 無 error／warning。截圖：`heart-review/r2-day.png`、`r2-night.png`、`r2-island.png`（商品目錄近景）、`r2-mobile.png`。未做實體手機 FPS 量測。
+
+### 收尾修正
+
+- 手機詳細資料 sheet：「← 返回清單」與「×」改為獨立一列，不再浮動擠壓縮圖；內容區高度同步扣除該列。截圖 `heart-review/r3-m-detail.png`。
+- 小屋夜間窗光由門旁 1 扇改為兩側各 1 扇並放大；近景可見，全景距離仍偏小（與既有路燈一致，未調整整體夜間光照）。
+- 同條件 draw calls 仍為 `182／174／192`，靜態批次 `13`，路線 `10`，Console 無 error／warning。
+
+## 網域主題調整：流量管控、服務註冊與發現
+
+原「庫存調度」「物流配送」是電商業務網域，與 API 架構主題無關；經使用者確認改為：
+
+| 原網域 | 新網域 | 服務（model 不變） | 對應資料流 |
+|---|---|---|---|
+| `inventory` 庫存調度 | `traffic` 流量管控 | `traffic-policy` 流量策略、`quota-service` 配額管理、`circuit-breaker` 熔斷保護、`throttle-event` 限流事件 | `reserve` 保留庫存 → `quota` 配額檢查（`api-gateway` → `quota-service`，gRPC、同步） |
+| `delivery` 物流配送 | `registry` 服務註冊與發現 | `discovery-service` 服務發現、`health-checker` 健康檢查、`config-center` 設定中心、`service-mesh` 服務網格 | `dispatch` 建立配送 → `discover` 服務查詢（`order-service` → `discovery-service`，gRPC、同步） |
+
+- axial、島色、主建物造型、封包數、RPM 與時段倍率不變；`dayCycle` 的 flowLoad 鍵與 highLoad 服務 id 已同步改名，英文表同步更新。
+- 為避免與既有服務重複，新服務未使用 `rate-limiter`（入口閘道「流量守門員」）與 `service-registry`（平台維運「服務名錄」）。
+- 驗證（Edge Headless）：12 網域、50 個唯一服務 id、10 條 flow 全部為有效路線；flow 端點、highLoad 與 flowLoad 均指向存在的 id；Console 無 error／warning。`SPEC.md` §1.2／§1.3 已依確認同步。
+- 其餘網域（商品目錄、訂單交易、支付清算、客戶中心等）仍為電商業務示範內容，未變更。
+
+## 小汽車：全景的城市生活感
+
+- 純裝飾的玩具小汽車（`createCars()`；原為行人，已依使用者意見改為汽車），沿既有路網（島內環路、通往橋口的支線與橋梁）隨機行駛、跨島移動，靠行進方向右側行駛，避免與封包中線重疊。小汽車**不代表 API 流量**：不可點選、不計入日誌或流量統計。
+- 桌面 70 輛、手機 35 輛；車身（主題色票）、車艙（cream）與底盤／輪胎（深色）三個 InstancedMesh，每幀只更新矩陣。轉彎時位置與車頭方向平滑過渡，不會在節點瞬間跳動。暫停與 reduced-motion 時停止。
+- 依相機距離放大（距離 30 以內原尺寸，85 以上 1.7 倍），讓全景仍可辨識。參數集中在 `DATA.ambient.cars`。
+- 驗證（Edge Headless，1440×900）：一般動畫下 1.5 秒前後局部截圖可見車輛沿路網移動；reduced-motion 600ms 內 render frame 增量 `0`；有效路線 `10`、封包池 `79` 不變；Console 無 error／warning。draw calls 相對加入前 `182／174／192 → 185／177／195`（+3）。未在實體手機量測 FPS。
 
 ## 驗證紀錄
 
