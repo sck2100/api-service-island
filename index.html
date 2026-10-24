@@ -54,7 +54,6 @@
     button, input { font: inherit; }
     button { min-height:44px; border:0; cursor:pointer; }
     button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline:3px solid var(--coral); outline-offset:2px; }
-    button:not(:disabled):hover { background:var(--yellow); color:var(--ink); }
     button:not(:disabled):active, button[aria-pressed="true"] { background:var(--ink); color:#f8ffff; }
     button:disabled { cursor:not-allowed; opacity:.42; }
     #ui-layer { position:absolute; z-index:8; inset:0; pointer-events:none; }
@@ -168,11 +167,11 @@
     .tool-btn, .hud-btn, .time-btn, .icon-close, .tutorial-actions button, .detail-back, .detail-close { border:1px solid var(--line); border-radius:999px; background:#fffdfa; color:var(--ink); box-shadow:none; }
     .hud-btn { border-radius:16px; }.hud-btn b { white-space:nowrap; }
     .tool-btn span, .hud-btn > span { color:var(--coral); }
-    button:not(:disabled):hover { background:var(--yellow); color:var(--ink); }
+    @media (hover:hover) { button:not(:disabled):not([aria-pressed="true"]):hover { background:var(--yellow); color:var(--ink); } }
     button:not(:disabled):active, button[aria-pressed="true"], .tool-btn[aria-pressed="true"], .hud-btn[aria-pressed="true"] { background:var(--ink); border-color:var(--ink); color:var(--cream); }
     button[aria-pressed="true"] > span { color:var(--yellow); }
     .primary-btn, .tutorial-actions .primary-btn, #reload-btn { border:0; border-radius:12px; background:var(--ink); color:var(--cream); font-weight:800; box-shadow:0 0 0 2px var(--cream),0 0 0 4px var(--coral); }
-    .primary-btn:not(:disabled):hover { background:var(--coral); color:#fff; }
+    @media (hover:hover) { .primary-btn:not(:disabled):hover { background:var(--coral); color:#fff; } }
     .search-box, .log-filter { border:1px solid var(--line); background:#fffdfa; color:var(--ink); }
     .search-box input { color:var(--ink); }.search-box input::placeholder { color:#9a8679; }.search-box > span { color:var(--coral); }
     .tabs { background:#f2e5dc; }.tabs button { color:var(--muted); }.tabs button[aria-selected="true"] { background:var(--ink); color:var(--cream); }
@@ -205,35 +204,27 @@
     .walker-label.is-overview-dot { border-color:#fff8f4; background:var(--coral); }
     @media (max-width:1100px) { .log-panel { right:16px; top:188px; width:318px; } }
     @media (max-width:900px) { .detail-panel { top:176px; } }
-    @media (max-width:700px) {
-      .brand { top:12px; left:12px; width:calc(100vw - 24px); padding:12px; }
-      .brand__eyebrow { display:none; }.brand h1 { font-size:20px; }.brand__subtitle { margin:3px 0 8px; }
-      .tool-btn { min-height:44px; }.catalog-panel,.detail-panel { z-index:4; top:120px; right:12px; bottom:92px; left:auto; width:min(318px,calc(100vw - 24px)); }
-      .detail-panel { left:12px; right:auto; width:calc(100vw - 24px); }
-      .hud { right:10px; left:10px; width:auto; max-width:none; transform:none; }.hud-time { min-width:82px; }
-      .metric-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.log-panel { z-index:6; top:120px; right:12px; width:calc(100vw - 24px); max-height:calc(100vh - 214px); }.flow-legend { right:12px; bottom:94px; }
-    }
+    /* Phones keep the desktop layout (brand card, floating panels, pill HUD), only scaled down. */
     @media (max-width:800px) {
       html,body,#app { height:100dvh; }
-      .brand { top:max(10px,env(safe-area-inset-top)); left:max(10px,env(safe-area-inset-left)); display:flex; align-items:center; gap:8px; width:auto; max-width:calc(100vw - 20px); padding:5px 5px 5px 14px; border-radius:999px; }
-      .brand__eyebrow, .brand__subtitle { display:none; }.brand h1 { flex:1 1 auto; min-width:0; overflow:hidden; font-size:15px; line-height:1.15; white-space:nowrap; text-overflow:ellipsis; }
-      .toolbar { display:flex; flex:0 0 auto; gap:4px; }.tool-btn { width:44px; min-width:44px; min-height:44px; padding:0; }.tool-btn b { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-      .catalog-panel,.detail-panel { --sheet-height:52dvh; z-index:10; top:auto; right:0; bottom:0; left:0; width:100%; height:var(--sheet-height); max-height:100dvh; padding:4px 14px calc(14px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; transform:translateY(105%); opacity:1; visibility:hidden; transition:transform .26s ease,visibility .26s; overflow:hidden; }
-      .catalog-panel.is-expanded,.detail-panel.is-expanded { padding-top:calc(4px + env(safe-area-inset-top)); }
-      .detail-panel { --sheet-height:34dvh; color:var(--ink); }.catalog-panel.is-open,.detail-panel.is-open { transform:none; visibility:visible; }
-      .sheet-handle,.detail-back { display:block; }.detail-actions { position:relative; z-index:3; float:none; align-items:center; justify-content:space-between; margin:0 0 6px; }.detail-back { min-width:44px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:#fffdfa; color:var(--ink); font-weight:700; }
-      .detail-close { position:static; float:none; margin:0; }.catalog-content { height:calc(100% - 174px); }.detail-panel #detail-content { height:calc(100% - 96px); overflow:auto; padding-bottom:12px; }
-      .hud { z-index:13; right:auto; bottom:max(8px,env(safe-area-inset-bottom)); left:max(8px,env(safe-area-inset-left)); width:auto; max-width:calc(100vw - 16px); padding:5px; transform:none; overflow:hidden; }
-      .hud-toggle { display:flex; flex-direction:column; min-width:66px; min-height:58px; align-items:center; justify-content:center; gap:2px; border:1px solid var(--line); border-radius:16px; background:#fffdfa; color:var(--ink); }.hud-toggle span { font-size:18px; }.hud-toggle b { font-size:10px; }
-      .hud:not(.is-open) .hud-contents { display:none; }.hud.is-open { right:8px; width:calc(100vw - 16px); max-height:46dvh; flex-wrap:wrap; overflow:auto; }.hud.is-open .hud-contents { display:contents; }.hud.is-open .hud-time { display:grid; }.hud.is-open .hud-group { display:flex; }.hud.is-open .hud-toggle { position:sticky; left:0; }
-      .hud-time { min-width:78px; }.hud-btn { min-width:55px; }.time-btn { min-width:51px; }
-      .log-panel { z-index:14; top:auto; right:0; bottom:0; left:0; width:100%; height:min(62dvh,560px); max-height:calc(100dvh - env(safe-area-inset-top) - 10px); padding:16px 14px calc(14px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; transform:translateY(105%); }.log-panel.is-open { transform:none; }.log-list { max-height:calc(100% - 132px); }
-      .flow-legend { right:10px; bottom:calc(76px + env(safe-area-inset-bottom)); max-width:calc(100vw - 20px); flex-wrap:wrap; }
-      .help-dialog { max-height:calc(100dvh - 24px); overflow:auto; padding:22px; }.tutorial-actions { grid-template-columns:1fr 1fr; }.tutorial-actions .primary-btn { grid-column:1/-1; }
+      .brand { top:max(10px,env(safe-area-inset-top)); left:max(10px,env(safe-area-inset-left)); width:min(300px,calc(100vw - 20px)); padding:12px; border-radius:16px; }
+      .brand__eyebrow { margin-bottom:4px; font-size:9px; }.brand h1 { font-size:18px; }.brand__subtitle { margin:3px 0 9px; font-size:11px; }
+      .toolbar { gap:5px; }.tool-btn { min-height:40px; gap:5px; padding:5px 6px; }.tool-btn span { font-size:15px; }
+      .catalog-panel,.detail-panel,.log-panel { top:calc(142px + env(safe-area-inset-top)); bottom:calc(84px + env(safe-area-inset-bottom)); padding:14px 12px; border-radius:16px; }
+      .catalog-panel { right:max(10px,env(safe-area-inset-right)); width:min(320px,calc(100vw - 20px)); }
+      .detail-panel { left:max(10px,env(safe-area-inset-left)); width:min(340px,calc(100vw - 20px)); }
+      .detail-panel h2 { font-size:22px; }.thumbnail-wrap { min-height:150px; }.thumbnail-wrap canvas { width:136px!important; height:136px!important; }
+      .log-panel { right:max(10px,env(safe-area-inset-right)); width:calc(100vw - 20px); max-height:none; }.log-list { max-height:calc(100% - 120px); }
+      .hud { left:max(10px,env(safe-area-inset-left)); right:max(10px,env(safe-area-inset-right)); bottom:max(8px,env(safe-area-inset-bottom)); max-width:none; padding:6px 8px; gap:6px; transform:none; }
+      .hud-time { min-width:74px; padding:2px 8px; }.hud-time strong { font-size:19px; }.hud-btn { min-width:52px; min-height:52px; }.time-btn { min-width:50px; }
+      .flow-legend { right:max(10px,env(safe-area-inset-right)); bottom:calc(80px + env(safe-area-inset-bottom)); max-width:calc(100vw - 20px); flex-wrap:wrap; }
+      .help-dialog { max-height:calc(100dvh - 24px); overflow:auto; padding:22px; }
+      .hud:not(.is-scroll-end) { -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent); }
+      #ui-layer:has(.detail-panel.is-open) .flow-legend { display:none; }
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
-    @media (max-width: 640px) { .brand { top: 14px; left: 14px; } .brand__phase, .hint { display: none; } .time-chip { top: 12px; right: 12px; } }
+    @media (max-width: 640px) { .brand__phase, .hint { display: none; } .time-chip { top: 12px; right: 12px; } }
   </style>
   <script type="importmap">
     {
@@ -415,7 +406,7 @@
       },
       ambient:{cars:{seed:77213, desktopCount:70, mobileCount:35, distanceScale:{near:30, far:85, max:1.7}, speed:[1.1,1.9], lateral:[.38,.46], scale:[.95,1.08], groundY:.44, bridgeY:.6, bob:.012, idleRate:14, turnRate:9,
         cabin:'#f4ece4', wheels:'#3d3431', colors:['#db6a41','#3e7c8c','#fcea8b','#fff8f4','#2f6170','#e0a63a','#c4553a','#8aa86b']}},
-      stage5:{mobileBreakpoint:800,catalogHeight:52,detailHeight:34,sheetViewShift:.5,mobilePixelRatio:1.4,tutorialStorage:'api-service-island:tutorial-v1'},
+      stage5:{mobileBreakpoint:800,catalogHeight:52,detailHeight:34,mobilePixelRatio:1.4,tutorialStorage:'api-service-island:tutorial-v1'},
       i18n: {
         zh:{ subtitle:'API 服務島',overview:'全景',list:'清單',help:'說明',search:'搜尋網域、服務或說明',domainsTab:'系統網域',flowsTab:'呼叫關係',
           close:'關閉',cityIndex:'城市索引',gotIt:'知道了',jumpTo:'跳至',noResults:'找不到符合條件的項目',nodes:'服務節點',connections:'相關連線',status:'狀態',metrics:'營運指標',from:'來源',to:'目的地',
@@ -2045,11 +2036,12 @@
       const onMotionChange = event => { reducedMotion=event.matches; controls.enableDamping=!reducedMotion; flowMeshes.forEach(mesh=>mesh.material.uniforms.uThreshold.value=reducedMotion?.52:mesh.userData.baseThreshold);if(reducedMotion){waterUniforms.uTime.value=0;cancelCameraFlight();} updatePauseButton();updateLiveState();needsRender=true; };
       reducedQuery.addEventListener?.('change',onMotionChange);
 
-      let viewShift=0;
-      function sheetObstruction(){if(!isMobileLayout())return 0;const panel=ui.detail.classList.contains('is-open')?ui.detail:ui.catalog.classList.contains('is-open')?ui.catalog:null;if(!panel)return 0;const cap=innerHeight*(panel===ui.detail?DATA.stage5.detailHeight:DATA.stage5.catalogHeight)/100;return THREE.MathUtils.clamp(innerHeight-panel.getBoundingClientRect().top,0,cap);}
-      function updateViewShift(delta){const target=sheetObstruction()*DATA.stage5.sheetViewShift;if(Math.abs(target-viewShift)<.5&&(target>0)===Boolean(camera.view?.enabled))return;viewShift=reducedMotion||Math.abs(target-viewShift)<.5?target:THREE.MathUtils.lerp(viewShift,target,Math.min(1,delta*10));const width=Math.max(1,container.clientWidth),height=Math.max(1,container.clientHeight);if(viewShift>=.5)camera.setViewOffset(width,height,0,viewShift,width,height);else camera.clearViewOffset();needsRender=true;lastCollisionCheck=0;}
-
       statusEl.classList.add('is-hidden');
+      // Phones open on the full city; the directory panel is one tap away in the brand card.
+      if(isMobileLayout())toggleCatalog(false);
+      // The pill HUD scrolls sideways on narrow screens; the edge fade hints at more controls until the end is reached.
+      const syncHudScroll=()=>ui.hud.classList.toggle('is-scroll-end',ui.hud.scrollLeft+ui.hud.clientWidth>=ui.hud.scrollWidth-12);
+      ui.hud.addEventListener('scroll',syncHudScroll,{passive:true});window.addEventListener('resize',syncHudScroll);syncHudScroll();
       syncResponsivePanels();
       if(!readTutorialSeen())setTimeout(()=>openTutorial(document.querySelector('#help-btn')),120);
       function animate(now) {
@@ -2071,7 +2063,6 @@
           needsRender=true;
         }
         updateCameraFlight(now);
-        updateViewShift(delta);
         const controlsChanged=controls.enableDamping?controls.update():false;
         if(cameraFlight||controlsChanged)needsRender=true;
         renderLogs(now);
