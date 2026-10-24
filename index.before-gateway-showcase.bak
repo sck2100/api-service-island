@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071622">
+  <link rel="icon" href="data:,">
+  <title>{架構示範}API 服務島</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #06131e;
+      color: #eaf8ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body { background: radial-gradient(circle at 50% 20%, #17364a 0%, #071622 48%, #030910 100%); }
+    #app { position: relative; width: 100%; height: 100%; isolation: isolate; }
+    #scene { position: absolute; inset: 0; }
+    #scene canvas { display: block; width: 100%; height: 100%; outline: none; }
+    .brand {
+      position: absolute; z-index: 5; top: max(18px, env(safe-area-inset-top)); left: max(20px, env(safe-area-inset-left));
+      pointer-events: none; text-shadow: 0 2px 18px rgba(0,0,0,.5);
+    }
+    .brand__eyebrow { margin: 0 0 5px; color: #74e3ff; font-size: 11px; font-weight: 750; letter-spacing: .24em; text-transform: uppercase; }
+    .brand h1 { margin: 0; font-size: clamp(20px, 3.4vw, 34px); line-height: 1; letter-spacing: -.035em; }
+    .brand__phase { display: inline-block; margin-top: 9px; padding: 5px 9px; border: 1px solid rgba(126,225,255,.3); border-radius: 999px; background: rgba(5,20,31,.58); color: #c8f5ff; font-size: 11px; backdrop-filter: blur(9px); }
+    .time-chip {
+      position: absolute; z-index: 5; right: max(18px, env(safe-area-inset-right)); top: max(18px, env(safe-area-inset-top));
+      min-width: 94px; padding: 9px 12px; border: 1px solid rgba(155,229,255,.22); border-radius: 12px;
+      background: rgba(4,18,28,.58); text-align: right; pointer-events: none; backdrop-filter: blur(10px);
+    }
+    .time-chip small { display: block; color: #83c9dc; font-size: 9px; letter-spacing: .18em; }
+    #clock { font-variant-numeric: tabular-nums; font-size: 19px; font-weight: 720; }
+    #status {
+      position: absolute; z-index: 20; inset: 0; display: grid; place-items: center; padding: 24px;
+      background: radial-gradient(circle at 50% 45%, rgba(14,49,66,.96), rgba(3,10,16,.99)); transition: opacity .5s ease, visibility .5s ease;
+    }
+    #status.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .status-card { width: min(420px, 100%); text-align: center; }
+    .loader { width: 38px; height: 38px; margin: 0 auto 18px; border: 2px solid rgba(117,224,255,.2); border-top-color: #74e4ff; border-radius: 50%; animation: spin .9s linear infinite; }
+    #status h2 { margin: 0 0 8px; font-size: 20px; }
+    #status p { margin: 0; color: #a8c5cf; font-size: 14px; line-height: 1.65; }
+    #status.is-error .loader { border-radius: 10px; border-color: #ff8e86; animation: none; transform: rotate(45deg); }
+    #status.is-error h2 { color: #ffaaa4; }
+    .island-label {
+      transform: translate(-50%, -50%); padding: 6px 10px; border: 1px solid rgba(198,244,255,.38); border-radius: 999px;
+      background: rgba(3,20,29,.74); color: #effcff; box-shadow: 0 7px 18px rgba(0,0,0,.24); font-size: 11px; font-weight: 700;
+      letter-spacing: .06em; white-space: nowrap; pointer-events: none; backdrop-filter: blur(7px);
+    }
+    .hint { position: absolute; z-index: 5; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); color: rgba(218,245,255,.65); font-size: 11px; letter-spacing: .08em; white-space: nowrap; pointer-events: none; }
+    :root { --cream:#f3e8d2; --paper:rgba(242,238,224,.88); --ink:#102b32; --teal:#45b7ac; --coral:#e77c68; --yellow:#efd36b; --stone:#8b9893; --glass:rgba(9,35,43,.72); --line:rgba(201,239,236,.24); --shadow:0 18px 50px rgba(0,13,20,.27); }
+    button, input { font: inherit; }
+    button { min-height:44px; border:0; cursor:pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline:3px solid var(--coral); outline-offset:2px; }
+    button:not(:disabled):hover { background:var(--yellow); color:var(--ink); }
+    button:not(:disabled):active, button[aria-pressed="true"] { background:var(--ink); color:#f8ffff; }
+    button:disabled { cursor:not-allowed; opacity:.42; }
+    #ui-layer { position:absolute; z-index:8; inset:0; pointer-events:none; }
+    #ui-layer > *, .help-dialog { pointer-events:auto; }
+    .ui-surface { border:1px solid rgba(211,244,241,.22); background:var(--glass); box-shadow:var(--shadow); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+    .brand { top:max(16px,env(safe-area-inset-top)); left:max(16px,env(safe-area-inset-left)); width:min(360px,calc(100vw - 32px)); padding:18px; border-radius:18px; text-shadow:none; pointer-events:auto; }
+    .brand__eyebrow, .eyebrow { display:block; margin:0 0 6px; color:#83e6ef; font:700 10px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:.18em; text-transform:uppercase; }
+    .brand h1 { font-size:clamp(21px,2.8vw,31px); color:#fff; }
+    .brand__subtitle { margin:6px 0 14px; color:#b8d7dc; font-size:12px; }
+    .toolbar { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+    .tool-btn, .hud-btn { display:flex; min-width:0; align-items:center; justify-content:center; gap:7px; min-height:48px; padding:7px 9px; border-radius:9px; background:rgba(226,247,243,.09); color:#def4f3; transition:background .16s ease,color .16s ease,transform .16s ease; }
+    .tool-btn span, .hud-btn > span { font-size:17px; line-height:1; }
+    .tool-btn b, .hud-btn b { font-size:11px; font-weight:750; }
+    .catalog-panel { position:absolute; top:max(16px,env(safe-area-inset-top)); right:max(16px,env(safe-area-inset-right)); bottom:116px; width:318px; padding:17px 14px; border-radius:18px; transform:translateX(calc(100% + 32px)); opacity:0; visibility:hidden; transition:transform .28s ease,opacity .28s ease,visibility .28s; overflow:hidden; }
+    .catalog-panel.is-open { transform:none; opacity:1; visibility:visible; }
+    .panel-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .panel-heading h2 { margin:0; font-size:20px; }
+    .icon-close { width:44px; min-width:44px; padding:0; border-radius:9px; background:rgba(255,255,255,.08); color:#fff; font-size:23px; }
+    .search-box { display:flex; align-items:center; gap:8px; margin:14px 0 10px; padding:0 11px; min-height:46px; border:1px solid var(--line); border-radius:12px; background:rgba(1,19,25,.48); }
+    .search-box input { width:100%; border:0; outline:0; color:#fff; background:transparent; font-size:13px; }
+    .search-box input::placeholder { color:#92afb4; }
+    .tabs { display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:4px; border-radius:12px; background:rgba(1,19,25,.4); }
+    .tabs button { min-height:40px; border-radius:9px; background:transparent; color:#bcd2d4; font-size:12px; }
+    .tabs button[aria-selected="true"] { background:var(--cream); color:var(--ink); }
+    .catalog-content { height:calc(100% - 132px); margin-top:10px; padding-right:3px; overflow:auto; scrollbar-width:thin; }
+    .domain-group { margin:0 0 8px; border:1px solid rgba(221,244,240,.14); border-radius:12px; background:rgba(1,20,26,.26); overflow:hidden; }
+    .domain-group summary { display:flex; align-items:center; gap:8px; min-height:46px; padding:8px 10px; cursor:pointer; list-style:none; }
+    .domain-group summary::-webkit-details-marker { display:none; }
+    .domain-group summary::after { content:'+'; margin-left:auto; color:#91c3c8; }
+    .domain-group[open] summary::after { content:'−'; }
+    .domain-dot { width:9px; height:9px; flex:0 0 auto; border-radius:50%; background:var(--domain-color); box-shadow:0 0 0 3px color-mix(in srgb,var(--domain-color),transparent 72%); }
+    .domain-select, .service-row, .flow-row { width:100%; text-align:left; color:#eaf7f6; background:transparent; }
+    .domain-select { min-height:36px; padding:6px 10px; border-radius:0; color:#93cbd0; font-size:11px; }
+    .service-row, .flow-row { display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:8px; min-height:48px; padding:7px 10px; border-top:1px solid rgba(221,244,240,.1); border-radius:0; }
+    .service-row .node-no { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:rgba(255,255,255,.1); font:700 10px ui-monospace,monospace; }
+    .service-row small, .flow-row small { display:block; color:#8dacb0; font-size:10px; }
+    .status-wrap { display:grid; justify-items:end; gap:3px; color:#b9d2d2; font-size:8px; white-space:nowrap; }.status-wrap .status-dot { position:static; }
+    .status-dot { width:8px; height:8px; border-radius:50%; background:#71cba2; }
+    .status-dot.warning { background:var(--yellow); }.status-dot.maintenance { background:var(--coral); }
+    .flow-row { grid-template-columns:1fr auto; border:1px solid rgba(221,244,240,.12); border-radius:12px; margin-bottom:7px; }
+    .flow-route { color:#b9d8d8; font-size:11px; }
+    .empty-state { margin:28px 8px; padding:20px; border:1px dashed rgba(220,245,241,.25); border-radius:14px; color:#a8c2c4; text-align:center; font-size:13px; }
+    .detail-panel { position:absolute; z-index:2; top:188px; left:max(16px,env(safe-area-inset-left)); bottom:116px; width:340px; padding:20px; border-radius:22px; background:rgba(243,237,218,.94); color:var(--ink); transform:translateX(calc(-100% - 32px)); opacity:0; visibility:hidden; overflow:auto; transition:transform .3s ease,opacity .3s ease,visibility .3s; }
+    .detail-panel.is-open { transform:none; opacity:1; visibility:visible; }
+    .detail-close { position:sticky; z-index:2; top:0; float:right; margin:-7px -7px 0 8px; background:rgba(16,43,50,.08); color:var(--ink); }
+    .detail-panel .eyebrow { color:#647a77; }
+    .detail-panel h2 { margin:4px 0 8px; font-size:26px; line-height:1.08; }
+    .detail-panel p { color:#4d6462; font-size:13px; line-height:1.6; }
+    .detail-icon { display:grid; place-items:center; width:52px; height:52px; border-radius:16px; background:var(--ink); color:var(--cream); font-size:24px; }
+    .thumbnail-wrap { display:grid; place-items:center; min-height:176px; margin:10px 0 15px; border-radius:18px; background:linear-gradient(145deg,#d6e0d5,#b9cbc3); overflow:hidden; }
+    .thumbnail-wrap canvas { width:160px!important; height:160px!important; }
+    .metric-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:13px 0; }
+    .metric { min-width:0; padding:11px 7px; border-radius:12px; background:rgba(16,43,50,.08); }
+    .metric strong { display:block; font:italic 20px/1 Georgia,serif; overflow:hidden; text-overflow:ellipsis; }
+    .metric small { display:block; margin-top:5px; color:#617571; font-size:9px; text-transform:uppercase; }
+    .node-list { display:grid; gap:6px; margin:11px 0; }
+    .node-list button { display:flex; align-items:center; gap:9px; width:100%; padding:7px 10px; border-radius:9px; background:rgba(16,43,50,.07); color:var(--ink); text-align:left; }
+    .chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .chip { display:inline-flex; align-items:center; min-height:30px; padding:5px 10px; border-radius:999px; background:rgba(69,183,172,.16); color:#245b5c; font:700 10px ui-monospace,monospace; }
+    button.chip { border:1px solid rgba(34,103,102,.15); }
+    .flow-hero { margin:14px 0; padding:16px; border-radius:17px; background:var(--ink); color:#effffb; }
+    .flow-hero strong { display:block; margin:9px 0; font:italic 21px Georgia,serif; }
+    .hud { position:absolute; left:50%; bottom:max(14px,env(safe-area-inset-bottom)); display:flex; align-items:stretch; gap:8px; max-width:calc(100vw - 28px); padding:8px; border-radius:16px; transform:translateX(-50%); overflow-x:auto; scrollbar-width:none; }
+    .hud-contents { display:contents; }
+    .hud::-webkit-scrollbar { display:none; }
+    .hud-time { display:grid; min-width:94px; align-content:center; padding:4px 10px; border-right:1px solid var(--line); }
+    .hud-time .eyebrow { margin:0; font-size:8px; }.hud-time strong { font:italic 24px/1 Georgia,serif; }.hud-time #period-name { color:#97c6ca; font-size:10px; }
+    .hud-group { display:flex; gap:5px; }
+    .hud-btn { flex-direction:column; min-width:58px; min-height:58px; gap:3px; padding:5px 7px; }
+    .hud-btn small { max-width:62px; font-size:7px; line-height:1.1; }
+    .time-btn { min-width:54px; padding:7px; border-radius:9px; background:rgba(226,247,243,.09); color:#e7f9f7; font:700 11px ui-monospace,monospace; }
+    .help-dialog { width:min(440px,calc(100vw - 28px)); padding:25px; border:1px solid rgba(222,247,243,.28); border-radius:22px; color:#eaffff; }
+    .help-dialog::backdrop { background:rgba(1,10,15,.64); backdrop-filter:blur(4px); }
+    .help-dialog .icon-close { float:right; margin:-12px -12px 0 8px; }
+    .help-dialog h2 { margin:5px 0 10px; }.help-dialog p { color:#b8d1d3; line-height:1.7; }
+    .primary-btn { width:100%; margin-top:8px; border-radius:9px; background:var(--cream); color:var(--ink); font-weight:800; }
+    .island-label { transition:opacity .18s ease,background .18s ease,transform .18s ease; }
+    .island-label.is-selected { background:var(--ink); border-color:var(--coral); color:#fff; transform:translate(-50%,-50%) scale(1.07); }
+    .island-label.is-muted { opacity:.28; }
+    .island-label.is-compact { max-width:44px; overflow:hidden; text-overflow:clip; }
+    .island-label.is-collision-hidden, .service-pin.is-collision-hidden { opacity:0!important; visibility:hidden; }
+    .service-pin { transform:translate(-50%,-100%); display:flex; align-items:center; gap:5px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,159,137,.72); background:rgba(16,43,50,.9); color:#fff; font-size:9px; white-space:nowrap; pointer-events:none; transition:opacity .16s ease; }
+    .service-pin b { color:#ffad99; font:800 10px ui-monospace,monospace; }.service-pin.is-compact span { display:none; }
+    .walker-label { transform:translate(-50%,-120%); padding:5px 9px; border:1px solid rgba(255,159,137,.75); border-radius:999px; background:rgba(16,43,50,.92); color:#fff; font:700 9px/1.2 ui-monospace,monospace; white-space:nowrap; pointer-events:none; transition:opacity .16s ease; }
+    .walker-label.is-compact { max-width:34px; overflow:hidden; color:transparent; }.walker-label.is-compact::after { content:'…'; position:absolute; inset:0; display:grid; place-items:center; color:#fff; }
+    .walker-label.is-collision-hidden { opacity:0!important; visibility:hidden; }
+    .flow-legend { position:absolute; z-index:3; right:16px; bottom:118px; display:flex; gap:7px; padding:8px 10px; border-radius:12px; font:700 9px ui-monospace,monospace; }
+    .flow-legend[hidden] { display:none; }.legend-item { display:flex; align-items:center; gap:5px; }.legend-line { width:25px; height:3px; border-radius:2px; background:var(--coral); }.legend-line.async { background:repeating-linear-gradient(90deg,var(--coral) 0 10px,transparent 10px 16px); }.legend-line.pending { background:repeating-linear-gradient(90deg,var(--coral) 0 5px,transparent 5px 15px); }
+    .log-panel { position:absolute; z-index:5; top:max(16px,env(safe-area-inset-top)); right:350px; width:min(360px,calc(100vw - 382px)); max-height:min(440px,calc(100vh - 136px)); padding:15px; border-radius:18px; opacity:0; visibility:hidden; transform:translateY(-12px); transition:opacity .2s ease,transform .2s ease,visibility .2s; overflow:hidden; }
+    .log-panel.is-open { opacity:1; visibility:visible; transform:none; }.log-panel .panel-heading { align-items:center; }.log-title { display:flex; align-items:center; gap:8px; }.live-dot { width:8px; height:8px; border-radius:50%; background:#70d59b; box-shadow:0 0 0 4px rgba(112,213,155,.15); }.live-dot.is-paused { background:var(--yellow); box-shadow:0 0 0 4px rgba(239,211,107,.14); }
+    .log-note { margin:7px 0 10px; color:#9ebfc1; font-size:10px; }.log-filter { width:100%; min-height:40px; margin-bottom:8px; padding:7px 9px; border:1px solid var(--line); border-radius:9px; background:#0b2b33; color:#efffff; }.log-list { max-height:310px; overflow:auto; scrollbar-width:thin; }.log-entry { display:grid; grid-template-columns:48px 62px 1fr; gap:6px; padding:8px 2px; border-top:1px solid rgba(221,244,240,.12); font-size:9px; line-height:1.4; }.log-entry time,.log-entry b { font-family:ui-monospace,monospace; }.log-entry b { color:#ffad99; }.log-entry span { color:#b8d3d5; }.log-empty { padding:24px 8px; color:#9ebfc1; text-align:center; font-size:11px; }
+    .sheet-handle,.detail-back,.hud-toggle { display:none; }
+    .sheet-handle { position:relative; width:100%; min-height:44px; padding:17px 44px 5px; border-radius:12px; background:transparent; color:inherit; font-size:10px; }
+    .sheet-handle::before { content:''; position:absolute; top:9px; left:50%; width:52px; height:5px; border-radius:99px; background:currentColor; opacity:.38; transform:translateX(-50%); }
+    .detail-actions { display:flex; justify-content:flex-end; gap:6px; }
+    .tutorial-progress { display:flex; gap:7px; margin:16px 0; }.tutorial-progress i { width:28px; height:4px; border-radius:9px; background:rgba(255,255,255,.18); }.tutorial-progress i.is-active { background:var(--coral); }
+    .tutorial-step { min-height:150px; }.tutorial-step strong { display:block; margin-bottom:8px; color:#fff; font-size:21px; }.tutorial-step p { margin:0; }
+    .tutorial-actions { display:grid; grid-template-columns:auto auto 1fr; gap:7px; margin-top:16px; }.tutorial-actions button { border-radius:9px; padding:8px 12px; background:rgba(255,255,255,.09); color:#fff; }.tutorial-actions .primary-btn { width:auto; margin:0; justify-self:stretch; }
+    #reload-btn { display:none; margin:18px auto 0; padding:8px 18px; border-radius:9px; background:var(--cream); color:var(--ink); font-weight:800; }
+    #status.is-error #reload-btn { display:inline-flex; }
+    @media (max-width:1100px) { .log-panel { right:16px; top:188px; width:318px; } }
+    @media (max-width:900px) { .detail-panel { top:176px; } }
+    @media (max-width:700px) {
+      .brand { top:12px; left:12px; width:calc(100vw - 24px); padding:12px; }
+      .brand__eyebrow { display:none; }.brand h1 { font-size:20px; }.brand__subtitle { margin:3px 0 8px; }
+      .tool-btn { min-height:44px; }.catalog-panel,.detail-panel { z-index:4; top:120px; right:12px; bottom:92px; left:auto; width:min(318px,calc(100vw - 24px)); }
+      .detail-panel { left:12px; right:auto; width:calc(100vw - 24px); }
+      .hud { right:10px; left:10px; width:auto; max-width:none; transform:none; }.hud-time { min-width:82px; }
+      .metric-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.log-panel { z-index:6; top:120px; right:12px; width:calc(100vw - 24px); max-height:calc(100vh - 214px); }.flow-legend { right:12px; bottom:94px; }
+    }
+    @media (max-width:800px) {
+      html,body,#app { height:100dvh; }
+      .brand { top:max(10px,env(safe-area-inset-top)); left:max(10px,env(safe-area-inset-left)); width:172px; padding:10px; }
+      .brand__eyebrow { display:none; }.brand h1 { font-size:16px; line-height:1.15; }.brand__subtitle { margin:3px 0 8px; font-size:10px; }
+      .toolbar { grid-template-columns:1fr; gap:5px; }.tool-btn { justify-content:flex-start; min-height:44px; padding:6px 11px; }
+      .catalog-panel,.detail-panel { --sheet-height:52dvh; z-index:10; top:auto; right:0; bottom:0; left:0; width:100%; height:var(--sheet-height); max-height:100dvh; padding:4px 14px calc(14px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; transform:translateY(105%); opacity:1; visibility:hidden; transition:transform .26s ease,visibility .26s; overflow:hidden; }
+      .catalog-panel.is-expanded,.detail-panel.is-expanded { padding-top:calc(4px + env(safe-area-inset-top)); }
+      .detail-panel { --sheet-height:34dvh; color:var(--ink); }.catalog-panel.is-open,.detail-panel.is-open { transform:none; visibility:visible; }
+      .sheet-handle,.detail-back { display:block; }.detail-actions { position:sticky; z-index:3; top:0; float:right; }.detail-back { min-width:44px; padding:0 10px; border-radius:9px; background:rgba(16,43,50,.08); color:var(--ink); }
+      .detail-close { position:static; float:none; margin:0; }.catalog-content { height:calc(100% - 174px); }.detail-panel #detail-content { height:calc(100% - 52px); overflow:auto; padding-bottom:12px; }
+      .hud { z-index:13; right:auto; bottom:max(8px,env(safe-area-inset-bottom)); left:max(8px,env(safe-area-inset-left)); width:auto; max-width:calc(100vw - 16px); padding:5px; transform:none; overflow:hidden; }
+      .hud-toggle { display:flex; flex-direction:column; min-width:66px; min-height:58px; align-items:center; justify-content:center; gap:2px; border-radius:10px; background:rgba(226,247,243,.09); color:#fff; }.hud-toggle span { font-size:18px; }.hud-toggle b { font-size:10px; }
+      .hud:not(.is-open) .hud-contents { display:none; }.hud.is-open { right:8px; width:calc(100vw - 16px); max-height:46dvh; flex-wrap:wrap; overflow:auto; }.hud.is-open .hud-contents { display:contents; }.hud.is-open .hud-time { display:grid; }.hud.is-open .hud-group { display:flex; }.hud.is-open .hud-toggle { position:sticky; left:0; }
+      .hud-time { min-width:78px; }.hud-btn { min-width:55px; }.time-btn { min-width:51px; }
+      .log-panel { z-index:14; top:auto; right:0; bottom:0; left:0; width:100%; height:min(62dvh,560px); max-height:calc(100dvh - env(safe-area-inset-top) - 10px); padding:16px 14px calc(14px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; transform:translateY(105%); }.log-panel.is-open { transform:none; }.log-list { max-height:calc(100% - 132px); }
+      .flow-legend { right:10px; bottom:calc(76px + env(safe-area-inset-bottom)); max-width:calc(100vw - 20px); flex-wrap:wrap; }
+      .help-dialog { max-height:calc(100dvh - 24px); overflow:auto; padding:22px; }.tutorial-actions { grid-template-columns:1fr 1fr; }.tutorial-actions .primary-btn { grid-column:1/-1; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+    @media (max-width: 640px) { .brand { top: 14px; left: 14px; } .brand__phase, .hint { display: none; } .time-chip { top: 12px; right: 12px; } }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main id="app" aria-label="API 服務島 3D 城市">
+    <div id="scene"></div>
+    <div id="ui-layer">
+      <header class="brand ui-surface" data-ui>
+        <p id="brand-eyebrow" class="brand__eyebrow">Architecture Atlas</p>
+        <h1 id="brand-title">{架構示範}API 服務島</h1>
+        <p class="brand__subtitle" data-i18n="subtitle" data-en="API Service Island">API 服務島</p>
+        <nav class="toolbar" aria-label="城市工具列">
+          <button id="overview-btn" class="tool-btn" type="button" data-i18n="overview" data-en="Overview" aria-label="返回全景"><span aria-hidden="true">◎</span><b>全景</b></button>
+          <button id="list-btn" class="tool-btn" type="button" data-i18n="list" data-en="Directory" aria-label="開啟系統清單" aria-controls="catalog-panel" aria-pressed="true" aria-expanded="true"><span aria-hidden="true">☷</span><b>清單</b></button>
+          <button id="help-btn" class="tool-btn" type="button" data-i18n="help" data-en="Help" aria-label="顯示操作說明"><span aria-hidden="true">?</span><b>說明</b></button>
+        </nav>
+      </header>
+
+      <aside id="catalog-panel" class="catalog-panel ui-surface is-open" data-ui aria-label="系統清單">
+        <button class="sheet-handle" data-sheet="catalog" type="button" aria-expanded="false" aria-label="展開系統清單">系統清單</button>
+        <div class="panel-heading"><div><span class="eyebrow">SERVICE DIRECTORY</span><h2 data-i18n="cityIndex" data-en="City index">城市索引</h2></div><button class="icon-close" id="catalog-close" type="button" aria-label="關閉清單" data-en="Close">×</button></div>
+        <label class="search-box"><span aria-hidden="true">⌕</span><input id="catalog-search" type="search" autocomplete="off" placeholder="搜尋網域、服務或說明" data-en="Search domains, services, or descriptions" aria-label="搜尋網域、服務或說明"></label>
+        <div class="tabs" role="tablist" aria-label="清單類型">
+          <button id="domains-tab" role="tab" aria-selected="true" aria-controls="catalog-content" data-tab="domains" data-i18n="domainsTab" data-en="Domains">系統網域</button>
+          <button id="flows-tab" role="tab" aria-selected="false" aria-controls="catalog-content" data-tab="flows" data-i18n="flowsTab" data-en="Call graph">呼叫關係</button>
+        </div>
+        <div id="catalog-content" class="catalog-content"></div>
+      </aside>
+
+      <aside id="detail-panel" class="detail-panel ui-surface" data-ui aria-live="polite" aria-label="詳細資料">
+        <button class="sheet-handle" data-sheet="detail" type="button" aria-expanded="false" aria-label="展開詳細資料">詳細資料</button>
+        <div class="detail-actions"><button class="detail-back" id="detail-back" type="button">← 返回清單</button><button class="icon-close detail-close" id="detail-close" type="button" aria-label="關閉詳細資料" data-en="Close">×</button></div>
+        <div id="detail-content"></div>
+      </aside>
+
+      <section class="hud ui-surface" data-ui aria-label="城市控制台">
+        <button id="hud-toggle" class="hud-toggle" type="button" aria-controls="city-hud-controls" aria-expanded="false"><span aria-hidden="true">◷</span><b>時間</b></button>
+        <div id="city-hud-controls" class="hud-contents">
+        <div class="hud-time"><span class="eyebrow" data-i18n="cityTime" data-en="City time">城市時間</span><strong id="clock">08:00</strong><span id="period-name">早晨</span></div>
+        <div id="time-presets" class="hud-group" aria-label="跳至指定時間"></div>
+        <div class="hud-group">
+          <button id="pause-btn" class="hud-btn" type="button" aria-pressed="false"><span aria-hidden="true">Ⅱ</span><b data-i18n="pause" data-en="Pause">暫停</b></button>
+          <button id="bird-btn" class="hud-btn" type="button" aria-pressed="false"><span aria-hidden="true">⌃</span><b data-i18n="bird" data-en="Bird view">鳥瞰</b></button>
+        </div>
+        <div class="hud-group phase4-controls" aria-label="流量模擬控制">
+          <button id="labels-btn" class="hud-btn" type="button" aria-pressed="false"><span aria-hidden="true">▣</span><b data-i18n="labels" data-en="Labels">名牌</b></button>
+          <button id="packets-btn" class="hud-btn" type="button" aria-pressed="true"><span aria-hidden="true">◇</span><b data-i18n="packets" data-en="Packets">封包</b></button>
+          <button id="api-lines-btn" class="hud-btn" type="button" aria-pressed="false"><span aria-hidden="true">↝</span><b data-i18n="apiLines" data-en="API links">API 連線</b></button>
+          <button id="logs-btn" class="hud-btn" type="button" aria-pressed="false" aria-expanded="false" aria-controls="log-panel"><span aria-hidden="true">≡</span><b data-i18n="logs" data-en="Logs">日誌</b></button>
+        </div>
+        </div>
+      </section>
+      <div id="flow-legend" class="flow-legend ui-surface" data-ui hidden aria-label="API 連線圖例"><span class="legend-item"><i class="legend-line"></i><b data-i18n="sync" data-en="Synchronous">同步</b></span><span class="legend-item"><i class="legend-line async"></i><b data-i18n="async" data-en="Asynchronous">非同步</b></span><span class="legend-item"><i class="legend-line pending"></i><b data-i18n="pending" data-en="Pending">待接通</b></span></div>
+      <aside id="log-panel" class="log-panel ui-surface" data-ui aria-label="系統日誌">
+        <div class="panel-heading"><div class="log-title"><i id="live-dot" class="live-dot"></i><div><span class="eyebrow" id="live-state">LIVE</span><h2 data-i18n="systemLog" data-en="System log">系統日誌</h2></div></div><button id="log-close" class="icon-close" type="button" aria-label="關閉系統日誌">×</button></div>
+        <p class="log-note" data-i18n="demoTraffic" data-en="Simulated demo traffic — not production monitoring data.">示範流量，非真實監控資料。</p>
+        <select id="log-filter" class="log-filter" aria-label="依資料流篩選"></select>
+        <div id="log-list" class="log-list" aria-live="off"></div>
+      </aside>
+    </div>
+
+    <dialog id="help-dialog" class="help-dialog ui-surface" data-ui aria-labelledby="help-title">
+      <button class="icon-close" id="help-close" type="button" aria-label="關閉說明">×</button>
+      <span class="eyebrow">QUICK GUIDE</span><h2 id="help-title">開始探索服務島</h2>
+      <div id="tutorial-progress" class="tutorial-progress" aria-label="教學進度"><i></i><i></i><i></i></div>
+      <div id="tutorial-step" class="tutorial-step" tabindex="-1"></div>
+      <div class="tutorial-actions"><button id="tutorial-prev" type="button">上一步</button><button id="tutorial-skip" type="button">略過</button><button id="tutorial-next" class="primary-btn" type="button">下一步</button></div>
+    </dialog>
+    <section id="status" role="status" aria-live="polite">
+      <div class="status-card">
+        <div class="loader" aria-hidden="true"></div>
+        <h2 id="status-title">正在建構服務島</h2>
+        <p id="status-message">準備海面、島嶼與城市路網…</p>
+        <button id="reload-btn" class="primary-btn reload-btn" type="button" hidden>重新載入</button>
+      </div>
+    </section>
+    <noscript><section style="position:absolute;z-index:30;inset:0;display:grid;place-items:center;padding:24px;background:#071622;text-align:center"><div><h2>需要啟用 JavaScript</h2><p style="color:#a8c5cf">這座互動式 3D 城市需要 JavaScript 與 WebGL 才能運作。</p></div></section></noscript>
+  </main>
+
+  <script type="module">
+    // DATA is intentionally kept at the top. Later phases will consume services, flows and models.
+    const DATA = {
+      city: { id: 'api-service-island', name: 'API 服務島', nameEn:'API Service Island', displayName: '{架構示範}API 服務島', displayNameEn:'{Architecture Demo} API Service Island', timezone: 'Asia/Taipei' },
+      palette: {
+        cream:'#eadfc8', warmCream:'#f5ead5', stone:'#aeb3a8', softStone:'#c9c9b9', darkStone:'#65716d',
+        teal:'#69b9ac', darkTeal:'#347f78', coral:'#df806c', blush:'#e8b4a3', clay:'#c69778',
+        leaf:'#6f956d', darkLeaf:'#4f765e', flower:'#e99ca4', trunk:'#80634f',
+        window:'#b7e1d4', lamp:'#ffe4a3', cloud:'#edf1e8', ink:'#243a3b'
+      },
+      artDirection: {
+        id:'warm-clay-toy-city', seed:928341, friendlyMainFaceChance:.36,
+        matteRoughness:.94, glowRoughness:.78, shadowRadius:3
+      },
+      modelCatalog: {
+        'edge-hub':'api-gateway', 'utility-pod':'server-array', 'shield-tower':'vault', 'route-station':'load-balancer',
+        'secure-hall':'lock', 'token-vault':'token', 'policy-court':'vault', 'data-house':'database',
+        'service-block':'server-array', 'support-hall':'monolith', 'catalog-hall':'monolith', 'price-tower':'clock',
+        'index-dome':'globe', 'order-hall':'monolith', 'checkout-station':'load-balancer', 'archive-house':'database',
+        'payment-hall':'monolith', 'radar-tower':'globe', 'vault':'vault', 'warehouse':'server-array',
+        'lock-house':'lock', 'signal-tower':'message-queue', 'dispatch-hall':'adapter', 'adapter-port':'adapter',
+        'signal-hall':'message-queue', 'mail-tower':'message-queue', 'collector-dome':'database', 'processor-hall':'server-array',
+        'control-hall':'server-array', 'registry-tower':'globe', 'clock-tower':'clock', 'clinic-pod':'server-array'
+      },
+      stage2: {
+        partKinds:['box','rbox','cylinder','cone','sphere','ico','dome','torus','prism','glowbox','glowsphere'],
+        scaleJitter:0.0072, mainBuildingPosition:[0,-0.58], mainBuildingScale:1.15,
+        serviceGrid:[[-2.45,1.7],[2.45,1.7],[-2.35,-2.35],[2.35,-2.35],[0,3.05],[0,-3.2]],
+        smallPropHideDistance:26, treesPerIsland:[4,5,4,6,5,4,6,5,4,5,6,4]
+      },
+      environment: {
+        seed:173281, terrainSize:170, terrainSegments:160, treeRadius:[16,52],
+        desktopTreeCount:300, mobileTreeCount:150, cloudGroups:12, cloudSpeed:0.42,
+        mountainRings:[{radius:59,height:10,color:'#446d72'},{radius:69,height:14,color:'#355963'},{radius:79,height:19,color:'#294552'}],
+        marine:[{kind:'islet',position:[-49,-24],scale:3.3},{kind:'tower',position:[48,-18],scale:1.1},{kind:'boat',position:[-42,31],scale:1.0}]
+      },
+      stage3: {
+        camera:{duration:800,islandOffset:[2.75,5.3,6.2],serviceOffset:[1.6,2.5,3.2],panelTargetShift:1.5,birdOffset:[.01,42,6]},
+        selectionMix:.22, highLoadMix:.22, pointerTolerance:6, labelHysteresis:8,
+        overview:{target:[0,0,-2],wideDistance:118,narrowDistance:146},
+        timePresets:[540,720,900,1260]
+      },
+      stage4: {
+        seed:482913, walkerHeight:.35, handoffSeconds:1.4, maxDelta:.08, maxLogs:100, logDomInterval:250,
+        badgeSize:128, badgeDistance:16, labelDistance:14, routeHeight:.68, tubeRadius:.035,
+        defaults:{labels:false,packets:true,apiLines:false,logs:false}
+      },
+      stage5:{mobileBreakpoint:800,catalogHeight:52,detailHeight:34,mobilePixelRatio:1.4,tutorialStorage:'api-service-island:tutorial-v1'},
+      i18n: {
+        zh:{ subtitle:'API 服務島',overview:'全景',list:'清單',help:'說明',search:'搜尋網域、服務或說明',domainsTab:'系統網域',flowsTab:'呼叫關係',
+          close:'關閉',cityIndex:'城市索引',gotIt:'知道了',jumpTo:'跳至',noResults:'找不到符合條件的項目',nodes:'服務節點',connections:'相關連線',status:'狀態',metrics:'營運指標',from:'來源',to:'目的地',
+          level:'等級',payload:'傳遞酬載',actor:'移動角色',sync:'同步',async:'非同步',pending:'待接通',healthy:'正常',warning:'注意',maintenance:'維護中',
+          pause:'暫停',resume:'繼續',bird:'鳥瞰',labels:'名牌',packets:'封包',apiLines:'API 連線',logs:'日誌',phase4:'階段 4 啟用',cityTime:'城市時間',
+          helpTitle:'階段 4 操作說明',helpBody:'點擊島嶼、建物、機器人或 API 連線查看資訊。HUD 可切換封包、名牌、連線與示範日誌；拖曳旋轉，Esc 清除選取。',
+          systemLog:'系統日誌',demoTraffic:'示範流量，非真實監控資料。',allFlows:'全部資料流',noLog:'尚無模擬事件',live:'LIVE',pausedState:'已暫停',request:'request',response:'response',waiting:'等待',timeout:'Timeout',direction:'目前方向',outbound:'前往目的地',returning:'返回來源',handoff:'端點交接',transmitting:'正在傳輸',walker:'數位封包',routeError:'資料流無有效路網路徑',
+          islandSummary:'系統網域',serviceUnit:'個服務',selectDomain:'選取網域',selectService:'選取服務',selectFlow:'選取資料流',highLoad:'高負載',itemNumber:'節點編號',protocol:'協定',metricRpm:'每分鐘請求',metricP95:'P95 毫秒',metricAvailability:'可用率 %',
+          brand:'{架構示範}API 服務島',toolbar:'城市工具列',backOverview:'返回全景',openDirectory:'開啟系統清單',showHelp:'顯示操作說明',directory:'系統清單',detail:'詳細資料',backList:'返回清單',expand:'展開',collapse:'收回',time:'時間',controls:'城市控制台',trafficControls:'流量模擬控制',filterFlow:'依資料流篩選',tutorialTitle:'開始探索服務島',tutorialProgress:'教學進度',previous:'上一步',next:'下一步',skip:'略過',startExplore:'開始探索',
+          tutorial1Title:'認識服務島',tutorial1:'拖曳旋轉場景、滾輪縮放，從不同角度觀察服務島。',tutorial1Touch:'單指拖曳旋轉、雙指縮放，從不同角度觀察服務島。',tutorial2Title:'查看服務',tutorial2:'點擊島嶼或建物，查看服務說明、狀態與營運指標。',tutorial3Title:'觀察流量',tutorial3:'開啟 API 連線、封包與日誌，再用時間按鈕觀察一天的流量。',
+          loading:'正在建構服務島',loadingMessage:'準備海面、島嶼與城市路網…',loadingEngine:'載入 Three.js 與必要控制元件…',reload:'重新載入',sceneError:'場景發生錯誤',loadIncomplete:'載入未能完成',engineError:'無法載入 3D 引擎',engineHint:'請確認網路連線、Live Server 與瀏覽器 import map 支援。',webglError:'無法啟動 WebGL',webglHint:'瀏覽器或顯示卡未提供可用的 WebGL 環境。請啟用硬體加速後重試。',thumbnail:'模型縮圖'},
+        en:{ subtitle:'API Service Island',overview:'Overview',list:'Directory',help:'Help',search:'Search domains, services, or descriptions',domainsTab:'Domains',flowsTab:'Call graph',
+          close:'Close',cityIndex:'City index',gotIt:'Got it',jumpTo:'Jump to',noResults:'No matching items',nodes:'Service nodes',connections:'Related calls',status:'Status',metrics:'Operational metrics',from:'From',to:'To',
+          level:'Level',payload:'Payload',actor:'Moving role',sync:'Synchronous',async:'Asynchronous',pending:'Pending',healthy:'Healthy',warning:'Warning',maintenance:'Maintenance',
+          pause:'Pause',resume:'Resume',bird:'Bird view',labels:'Labels',packets:'Packets',apiLines:'API links',logs:'Logs',phase4:'Enabled in phase 4',cityTime:'City time',
+          helpTitle:'Phase 4 controls',helpBody:'Select an island, building, packet walker, or API link. Use the HUD to toggle packets, labels, links, and demo logs. Drag to orbit and press Esc to clear.',
+          systemLog:'System log',demoTraffic:'Simulated demo traffic — not production monitoring data.',allFlows:'All flows',noLog:'No simulated events yet',live:'LIVE',pausedState:'Paused',request:'request',response:'response',waiting:'Waiting',timeout:'Timeout',direction:'Direction',outbound:'To destination',returning:'Returning to source',handoff:'Endpoint handoff',transmitting:'Transmitting',walker:'Digital packet',routeError:'No valid road-network route for flow',
+          islandSummary:'System domain',serviceUnit:'services',selectDomain:'Select domain',selectService:'Select service',selectFlow:'Select flow',highLoad:'High load',itemNumber:'Node number',protocol:'Protocol',metricRpm:'Requests/min',metricP95:'P95 ms',metricAvailability:'Availability %',
+          brand:'{Architecture Demo} API Service Island',toolbar:'City toolbar',backOverview:'Return to overview',openDirectory:'Open system directory',showHelp:'Show instructions',directory:'System directory',detail:'Details',backList:'Back to directory',expand:'Expand',collapse:'Collapse',time:'Time',controls:'City controls',trafficControls:'Traffic simulation controls',filterFlow:'Filter by flow',tutorialTitle:'Explore the service island',tutorialProgress:'Tutorial progress',previous:'Previous',next:'Next',skip:'Skip',startExplore:'Start exploring',
+          tutorial1Title:'Meet the service island',tutorial1:'Drag to orbit and use the wheel to zoom around the service islands.',tutorial1Touch:'Drag with one finger to orbit and pinch with two fingers to zoom.',tutorial2Title:'Inspect services',tutorial2:'Select an island or building to view its description, status, and operational metrics.',tutorial3Title:'Watch traffic',tutorial3:'Enable API links, packets, and logs, then use the time buttons to observe a full day of traffic.',
+          loading:'Building the service island',loadingMessage:'Preparing water, islands, and the city road network…',loadingEngine:'Loading Three.js and required controls…',reload:'Reload',sceneError:'Scene error',loadIncomplete:'Loading did not complete',engineError:'Unable to load the 3D engine',engineHint:'Check your connection, Live Server, and browser import-map support.',webglError:'Unable to start WebGL',webglHint:'No usable WebGL context is available. Enable browser hardware acceleration and try again.',thumbnail:'model preview'}
+      },
+      domains: [
+        { id: 'gateway', name: '入口閘道', axial: [0, 0], color: '#45d9ff', services: [
+          { id:'api-gateway', name:'API Gateway', description:'統一接住外部請求並分流。', metrics:{ rpm:18400, p95:82, availability:99.99 }, status:'healthy', model:'edge-hub' },
+          { id:'rate-limiter', name:'流量守門員', description:'限制突發流量，避免服務過載。', metrics:{ rpm:18120, p95:4, availability:99.99 }, status:'healthy', model:'utility-pod' },
+          { id:'waf', name:'應用防火牆', description:'擋下惡意或異常的網路請求。', metrics:{ rpm:18400, p95:7, availability:99.98 }, status:'healthy', model:'shield-tower' },
+          { id:'request-router', name:'請求路由器', description:'依路徑把請求送到正確系統。', metrics:{ rpm:17640, p95:12, availability:99.97 }, status:'healthy', model:'route-station' }
+        ]},
+        { id: 'identity', name: '身分驗證', axial: [1, 0], color: '#8ee5ff', services: [
+          { id:'auth-service', name:'登入服務', description:'驗證帳密與登入流程。', metrics:{ rpm:4200, p95:118, availability:99.96 }, status:'healthy', model:'secure-hall' },
+          { id:'token-service', name:'權杖中心', description:'簽發與更新存取權杖。', metrics:{ rpm:6900, p95:46, availability:99.98 }, status:'healthy', model:'token-vault' },
+          { id:'permission-service', name:'權限服務', description:'判斷使用者可以執行哪些操作。', metrics:{ rpm:9100, p95:33, availability:99.95 }, status:'warning', model:'policy-court' },
+          { id:'profile-service', name:'帳號資料', description:'保存基本帳號與偏好設定。', metrics:{ rpm:3100, p95:74, availability:99.97 }, status:'healthy', model:'data-house' }
+        ]},
+        { id: 'customer', name: '客戶中心', axial: [1, -1], color: '#69f1c5', services: [
+          { id:'customer-service', name:'客戶服務', description:'管理客戶主檔與聯絡資訊。', metrics:{ rpm:2800, p95:91, availability:99.94 }, status:'healthy', model:'service-block' },
+          { id:'preference-service', name:'偏好設定', description:'記錄通知、語言與個人化選項。', metrics:{ rpm:1700, p95:59, availability:99.96 }, status:'healthy', model:'utility-pod' },
+          { id:'segment-service', name:'客群分類', description:'把客戶整理成可理解的群組。', metrics:{ rpm:840, p95:146, availability:99.91 }, status:'warning', model:'data-house' },
+          { id:'support-service', name:'客服案件', description:'追蹤問題、回覆與處理進度。', metrics:{ rpm:620, p95:132, availability:99.93 }, status:'healthy', model:'support-hall' }
+        ]},
+        { id: 'catalog', name: '商品目錄', axial: [0, -1], color: '#adf17b', services: [
+          { id:'catalog-service', name:'商品目錄', description:'提供商品名稱、分類與上架狀態。', metrics:{ rpm:7600, p95:68, availability:99.98 }, status:'healthy', model:'catalog-hall' },
+          { id:'pricing-service', name:'定價服務', description:'計算售價、折扣與區域價格。', metrics:{ rpm:5400, p95:86, availability:99.95 }, status:'healthy', model:'price-tower' },
+          { id:'search-index', name:'搜尋索引', description:'讓商品能被快速找到。', metrics:{ rpm:9200, p95:51, availability:99.92 }, status:'warning', model:'index-dome' },
+          { id:'media-metadata', name:'媒體資料', description:'管理商品影像的描述與排序。', metrics:{ rpm:2300, p95:43, availability:99.97 }, status:'healthy', model:'data-house' }
+        ]},
+        { id: 'order', name: '訂單交易', axial: [-1, 0], color: '#ffc866', services: [
+          { id:'order-service', name:'訂單服務', description:'建立並追蹤每一筆訂單。', metrics:{ rpm:3600, p95:124, availability:99.97 }, status:'healthy', model:'order-hall' },
+          { id:'cart-service', name:'購物車', description:'暫存顧客挑選的商品。', metrics:{ rpm:8800, p95:42, availability:99.96 }, status:'healthy', model:'utility-pod' },
+          { id:'checkout-service', name:'結帳服務', description:'整合價格、庫存與付款步驟。', metrics:{ rpm:2200, p95:188, availability:99.93 }, status:'warning', model:'checkout-station' },
+          { id:'order-history', name:'訂單紀錄', description:'提供歷史訂單與狀態查詢。', metrics:{ rpm:4100, p95:77, availability:99.98 }, status:'healthy', model:'archive-house' }
+        ]},
+        { id: 'payment', name: '支付清算', axial: [-1, 1], color: '#ff9c75', services: [
+          { id:'payment-service', name:'支付服務', description:'協調信用卡與多元付款。', metrics:{ rpm:2100, p95:236, availability:99.95 }, status:'healthy', model:'payment-hall' },
+          { id:'fraud-service', name:'風險偵測', description:'即時辨識可疑交易。', metrics:{ rpm:2050, p95:94, availability:99.97 }, status:'healthy', model:'radar-tower' },
+          { id:'refund-service', name:'退款服務', description:'處理退款與原路退回。', metrics:{ rpm:190, p95:312, availability:99.92 }, status:'maintenance', model:'utility-pod' },
+          { id:'ledger-service', name:'交易帳本', description:'留下可核對的收付款紀錄。', metrics:{ rpm:2600, p95:61, availability:99.99 }, status:'healthy', model:'vault' }
+        ]},
+        { id: 'inventory', name: '庫存調度', axial: [0, 1], color: '#d8e56f', services: [
+          { id:'inventory-service', name:'庫存服務', description:'回報各地可售數量。', metrics:{ rpm:5700, p95:72, availability:99.96 }, status:'healthy', model:'warehouse' },
+          { id:'reservation-service', name:'庫存保留', description:'結帳期間暫時鎖定商品。', metrics:{ rpm:2400, p95:89, availability:99.94 }, status:'healthy', model:'lock-house' },
+          { id:'warehouse-service', name:'倉儲服務', description:'協調揀貨與倉庫作業。', metrics:{ rpm:1200, p95:138, availability:99.91 }, status:'warning', model:'warehouse' },
+          { id:'stock-event', name:'庫存事件', description:'發布補貨、扣庫與盤點變化。', metrics:{ rpm:6600, p95:29, availability:99.98 }, status:'healthy', model:'signal-tower' }
+        ]},
+        { id: 'delivery', name: '物流配送', axial: [2, -1], color: '#7bd9ff', services: [
+          { id:'delivery-service', name:'配送服務', description:'建立配送任務並追蹤狀態。', metrics:{ rpm:1600, p95:143, availability:99.94 }, status:'healthy', model:'dispatch-hall' },
+          { id:'route-planner', name:'路線規劃', description:'計算更有效率的配送路線。', metrics:{ rpm:470, p95:284, availability:99.89 }, status:'warning', model:'route-station' },
+          { id:'carrier-adapter', name:'物流介接', description:'串接不同物流商的格式。', metrics:{ rpm:1400, p95:201, availability:99.92 }, status:'healthy', model:'adapter-port' },
+          { id:'tracking-service', name:'包裹追蹤', description:'提供包裹目前位置與進度。', metrics:{ rpm:5100, p95:83, availability:99.96 }, status:'healthy', model:'radar-tower' }
+        ]},
+        { id: 'notification', name: '訊息通知', axial: [2, -2], color: '#c89cff', services: [
+          { id:'notification-service', name:'通知中心', description:'決定何時用哪個管道通知。', metrics:{ rpm:3900, p95:64, availability:99.95 }, status:'healthy', model:'signal-hall' },
+          { id:'email-service', name:'電子郵件', description:'寄送交易與行銷郵件。', metrics:{ rpm:2200, p95:176, availability:99.93 }, status:'healthy', model:'mail-tower' },
+          { id:'sms-service', name:'簡訊服務', description:'傳送即時簡訊與驗證碼。', metrics:{ rpm:940, p95:221, availability:99.90 }, status:'warning', model:'signal-tower' },
+          { id:'push-service', name:'推播服務', description:'把更新送到手機與瀏覽器。', metrics:{ rpm:4800, p95:97, availability:99.94 }, status:'healthy', model:'signal-tower' }
+        ]},
+        { id: 'analytics', name: '數據分析', axial: [1, -2], color: '#b99cff', services: [
+          { id:'event-collector', name:'事件收集', description:'接收各系統送來的行為事件。', metrics:{ rpm:24800, p95:31, availability:99.96 }, status:'healthy', model:'collector-dome' },
+          { id:'stream-processor', name:'串流處理', description:'即時整理持續進來的資料。', metrics:{ rpm:23100, p95:78, availability:99.91 }, status:'warning', model:'processor-hall' },
+          { id:'report-service', name:'報表服務', description:'產生營運指標與趨勢報表。', metrics:{ rpm:620, p95:340, availability:99.88 }, status:'maintenance', model:'archive-house' },
+          { id:'feature-store', name:'特徵資料庫', description:'保存分析與模型共用的特徵。', metrics:{ rpm:3100, p95:55, availability:99.93 }, status:'healthy', model:'data-house' }
+        ]},
+        { id: 'platform', name: '平台維運', axial: [-1, -1], color: '#70d6c3', services: [
+          { id:'config-service', name:'設定中心', description:'集中提供各服務的環境設定。', metrics:{ rpm:980, p95:24, availability:99.99 }, status:'healthy', model:'control-hall' },
+          { id:'service-registry', name:'服務名錄', description:'記錄每個服務目前可用的位置。', metrics:{ rpm:5200, p95:18, availability:99.99 }, status:'healthy', model:'registry-tower' },
+          { id:'scheduler', name:'排程服務', description:'依時間啟動例行背景工作。', metrics:{ rpm:330, p95:71, availability:99.94 }, status:'healthy', model:'clock-tower' },
+          { id:'secret-service', name:'機密保管', description:'安全提供金鑰與敏感設定。', metrics:{ rpm:760, p95:39, availability:99.99 }, status:'healthy', model:'vault' },
+          { id:'deployment-service', name:'部署控制', description:'協調版本發布與回復。', metrics:{ rpm:85, p95:416, availability:99.90 }, status:'maintenance', model:'control-hall' }
+        ]},
+        { id: 'observability', name: '監控觀測', axial: [-2, 0], color: '#ff87bd', services: [
+          { id:'metrics-service', name:'指標中心', description:'彙整速度、流量與錯誤率。', metrics:{ rpm:28600, p95:37, availability:99.97 }, status:'healthy', model:'radar-tower' },
+          { id:'log-service', name:'日誌中心', description:'集中保存服務運作紀錄。', metrics:{ rpm:31200, p95:49, availability:99.95 }, status:'healthy', model:'archive-house' },
+          { id:'trace-service', name:'鏈路追蹤', description:'串起一次請求經過的所有服務。', metrics:{ rpm:17400, p95:63, availability:99.92 }, status:'warning', model:'route-station' },
+          { id:'alert-service', name:'告警服務', description:'異常時通知維運人員。', metrics:{ rpm:120, p95:88, availability:99.98 }, status:'healthy', model:'signal-tower' },
+          { id:'health-service', name:'健康檢查', description:'持續確認服務是否正常回應。', metrics:{ rpm:9800, p95:22, availability:99.99 }, status:'healthy', model:'clinic-pod' }
+        ]}
+      ],
+      flows: [
+        { id:'browse', name:'瀏覽商品', from:'api-gateway', to:'catalog-service', protocol:'HTTPS', rpm:7200, level:'核心', mode:'sync', payload:'商品查詢條件', actor:'查詢封包', walkers:10, speed:.68, accessory:'magnifier', badge:'json' },
+        { id:'login', name:'會員登入', from:'api-gateway', to:'auth-service', protocol:'HTTPS', rpm:4100, level:'關鍵', mode:'sync', payload:'登入憑證', actor:'驗證封包', walkers:8, speed:.64, accessory:'lock', badge:'jwe' },
+        { id:'checkout', name:'送出結帳', from:'checkout-service', to:'order-service', protocol:'gRPC', rpm:2100, level:'關鍵', mode:'sync', payload:'購物車快照', actor:'結帳封包', walkers:7, speed:.37, accessory:'shield', badge:'token' },
+        { id:'charge', name:'交易請款', from:'order-service', to:'payment-service', protocol:'gRPC', rpm:1980, level:'關鍵', mode:'sync', payload:'付款授權', actor:'支付封包', walkers:6, speed:.35, accessory:'lock', badge:'jws' },
+        { id:'reserve', name:'保留庫存', from:'order-service', to:'reservation-service', protocol:'Kafka', rpm:2050, level:'核心', mode:'async', payload:'庫存保留事件', actor:'庫存事件', walkers:9, speed:.66, accessory:'shield', badge:'json' },
+        { id:'dispatch', name:'建立配送', from:'order-service', to:'delivery-service', protocol:'Kafka', rpm:1560, level:'一般', mode:'async', payload:'出貨任務', actor:'配送事件', walkers:5, speed:.34, accessory:'shield', badge:'token' },
+        { id:'notify', name:'交易通知', from:'order-service', to:'notification-service', protocol:'Kafka', rpm:3600, level:'一般', mode:'async', payload:'通知內容', actor:'訊息事件', walkers:7, speed:.38, accessory:'magnifier', badge:'json' },
+        { id:'telemetry', name:'觀測資料', from:'event-collector', to:'metrics-service', protocol:'OTLP', rpm:16800, level:'觀測', mode:'pending', payload:'追蹤與指標批次', actor:'遙測封包', walkers:12, speed:.70, accessory:'magnifier', badge:'json' }
+      ],
+      get apiFlows(){ return this.flows; },
+      dayCycle: [
+        { id:'dawn', label:'清晨', start:'05:00', highLoad:['scheduler','stock-event'] }, { id:'morning', label:'早晨', start:'07:00', highLoad:['auth-service','api-gateway','catalog-service'] },
+        { id:'noon', label:'正午', start:'11:00', highLoad:['search-index','cart-service','pricing-service'] }, { id:'afternoon', label:'午後', start:'14:00', highLoad:['order-service','checkout-service','payment-service'] },
+        { id:'sunset', label:'黃昏', start:'17:00', highLoad:['delivery-service','tracking-service','notification-service'] }, { id:'evening', label:'晚間', start:'19:00', highLoad:['stream-processor','report-service','event-collector'] },
+        { id:'midnight', label:'深夜', start:'23:00', highLoad:['log-service','metrics-service','trace-service'] }, { id:'predawn', label:'夜盡', start:'03:00', highLoad:['deployment-service','health-service'] }
+      ],
+      lightKeyframes: [
+        { minute:0, sky:'#020713', horizon:'#11233d', sun:'#6680a8', sunIntensity:0.02, hemiIntensity:0.10, fog:'#07131e', water:'#071b2b' },
+        { minute:300, sky:'#15233d', horizon:'#f48a70', sun:'#ffb274', sunIntensity:0.55, hemiIntensity:0.32, fog:'#334c5e', water:'#17425b' },
+        { minute:480, sky:'#2389bb', horizon:'#bdeeff', sun:'#fff2cf', sunIntensity:1.55, hemiIntensity:0.72, fog:'#87bac8', water:'#14728c' },
+        { minute:720, sky:'#3ca7d3', horizon:'#e8fbff', sun:'#fff8df', sunIntensity:2.00, hemiIntensity:0.88, fog:'#a7d3d8', water:'#1389a1' },
+        { minute:1020, sky:'#2c79a1', horizon:'#ffb27b', sun:'#ffbd78', sunIntensity:1.00, hemiIntensity:0.55, fog:'#688c98', water:'#17677c' },
+        { minute:1140, sky:'#18294a', horizon:'#f06f78', sun:'#ff8f77', sunIntensity:0.30, hemiIntensity:0.25, fog:'#35485b', water:'#12394e' },
+        { minute:1320, sky:'#050a1b', horizon:'#172a47', sun:'#819bd0', sunIntensity:0.04, hemiIntensity:0.12, fog:'#0d1b29', water:'#081f31' },
+        { minute:1440, sky:'#020713', horizon:'#11233d', sun:'#6680a8', sunIntensity:0.02, hemiIntensity:0.10, fog:'#07131e', water:'#071b2b' }
+      ],
+      english:{
+        domains:{gateway:'Gateway',identity:'Identity',customer:'Customer',catalog:'Catalog',order:'Orders',payment:'Payments',inventory:'Inventory',delivery:'Delivery',notification:'Notifications',analytics:'Analytics',platform:'Platform',observability:'Observability'},
+        services:{
+          'api-gateway':['API Gateway','Receives external requests and routes them.'],'rate-limiter':['Rate Limiter','Controls traffic bursts to prevent overload.'],waf:['Application Firewall','Blocks malicious or abnormal requests.'],'request-router':['Request Router','Routes requests to the correct system.'],
+          'auth-service':['Sign-in Service','Validates credentials and sign-in flows.'],'token-service':['Token Center','Issues and refreshes access tokens.'],'permission-service':['Permission Service','Determines which actions a user may perform.'],'profile-service':['Account Profile','Stores account details and preferences.'],
+          'customer-service':['Customer Service','Manages customer records and contact details.'],'preference-service':['Preferences','Stores notification, language, and personalization choices.'],'segment-service':['Customer Segments','Groups customers into useful audiences.'],'support-service':['Support Cases','Tracks questions, replies, and resolution progress.'],
+          'catalog-service':['Product Catalog','Provides product names, categories, and availability.'],'pricing-service':['Pricing Service','Calculates prices, discounts, and regional pricing.'],'search-index':['Search Index','Makes products quick to find.'],'media-metadata':['Media Metadata','Manages product-media descriptions and ordering.'],
+          'order-service':['Order Service','Creates and tracks every order.'],'cart-service':['Shopping Cart','Temporarily holds selected products.'],'checkout-service':['Checkout Service','Coordinates pricing, inventory, and payment.'],'order-history':['Order History','Provides past orders and status queries.'],
+          'payment-service':['Payment Service','Coordinates cards and alternative payments.'],'fraud-service':['Risk Detection','Detects suspicious transactions in real time.'],'refund-service':['Refund Service','Processes refunds to the original method.'],'ledger-service':['Transaction Ledger','Keeps auditable payment records.'],
+          'inventory-service':['Inventory Service','Reports available stock by location.'],'reservation-service':['Stock Reservation','Temporarily locks items during checkout.'],'warehouse-service':['Warehouse Service','Coordinates picking and warehouse operations.'],'stock-event':['Inventory Events','Publishes replenishment and stock changes.'],
+          'delivery-service':['Delivery Service','Creates delivery jobs and tracks status.'],'route-planner':['Route Planner','Calculates efficient delivery routes.'],'carrier-adapter':['Carrier Adapter','Connects the formats of different carriers.'],'tracking-service':['Parcel Tracking','Reports parcel location and progress.'],
+          'notification-service':['Notification Center','Chooses when and how to notify.'],'email-service':['Email Service','Sends transactional and campaign emails.'],'sms-service':['SMS Service','Sends alerts and verification codes.'],'push-service':['Push Service','Sends updates to phones and browsers.'],
+          'event-collector':['Event Collector','Receives behavior events from every system.'],'stream-processor':['Stream Processor','Processes continuous data in real time.'],'report-service':['Report Service','Produces operational metrics and trend reports.'],'feature-store':['Feature Store','Stores shared analytics and model features.'],
+          'config-service':['Configuration Center','Provides centralized environment configuration.'],'service-registry':['Service Registry','Records available locations for each service.'],scheduler:['Scheduler','Starts routine background work on time.'],'secret-service':['Secret Vault','Securely provides keys and sensitive settings.'],'deployment-service':['Deployment Control','Coordinates releases and rollbacks.'],
+          'metrics-service':['Metrics Center','Aggregates latency, traffic, and error rates.'],'log-service':['Log Center','Stores service operating records.'],'trace-service':['Distributed Tracing','Connects every service in a request journey.'],'alert-service':['Alert Service','Notifies operators when anomalies occur.'],'health-service':['Health Checks','Continuously verifies service responses.']
+        },
+        flows:{browse:['Browse products','Product query','Query packet','Core'],login:['Member sign-in','Credentials','Validation packet','Critical'],checkout:['Submit checkout','Cart snapshot','Checkout packet','Critical'],charge:['Authorize charge','Payment authorization','Payment packet','Critical'],reserve:['Reserve stock','Inventory reservation event','Inventory event','Core'],dispatch:['Create delivery','Shipment job','Delivery event','General'],notify:['Transaction notification','Notification content','Message event','General'],telemetry:['Telemetry data','Trace and metrics batch','Telemetry packet','Observability']},
+        periods:{dawn:'Dawn',morning:'Morning',noon:'Noon',afternoon:'Afternoon',sunset:'Sunset',evening:'Evening',midnight:'Late night',predawn:'Before dawn'}
+      }
+    };
+
+    const statusEl = document.querySelector('#status');
+    const statusTitle = document.querySelector('#status-title');
+    const statusMessage = document.querySelector('#status-message');
+    const clockEl = document.querySelector('#clock');
+    const container = document.querySelector('#scene');
+    const UI_LANG = new URLSearchParams(location.search).get('lang')?.toLowerCase()==='en'?'en':'zh';
+    const tr = key => DATA.i18n[UI_LANG]?.[key] ?? DATA.i18n.zh[key] ?? key;
+    const localize = (item,key='name') => UI_LANG==='en' ? (item[`${key}En`] ?? item[key]) : item[key];
+    DATA.domains.forEach(domain=>{domain.nameEn=DATA.english.domains[domain.id]||domain.name;domain.services.forEach(service=>{const translated=DATA.english.services[service.id];service.nameEn=translated?.[0]||service.name;service.descriptionEn=translated?.[1]||service.description;});});
+    DATA.flows.forEach(flow=>{const translated=DATA.english.flows[flow.id];flow.nameEn=translated?.[0]||flow.name;flow.payloadEn=translated?.[1]||flow.payload;flow.actorEn=translated?.[2]||flow.actor;flow.levelEn=translated?.[3]||flow.level;});
+    DATA.dayCycle.forEach(period=>period.labelEn=DATA.english.periods[period.id]||period.label);
+    document.documentElement.lang=UI_LANG==='en'?'en':'zh-Hant';
+    document.title=localize(DATA.city,'displayName');
+
+    function applyStaticTranslations(){
+      document.querySelector('#brand-title').textContent=localize(DATA.city,'displayName');document.querySelector('.brand__subtitle').textContent=localize(DATA.city);
+      const text={overview:'overview',list:'list',help:'help',cityIndex:'cityIndex',domainsTab:'domainsTab',flowsTab:'flowsTab',cityTime:'cityTime',pause:'pause',bird:'bird',labels:'labels',packets:'packets',apiLines:'apiLines',logs:'logs',sync:'sync',async:'async',pending:'pending',systemLog:'systemLog',demoTraffic:'demoTraffic'};
+      Object.entries(text).forEach(([id,key])=>{const el=document.querySelector(`[data-i18n="${id}"]`);if(!el)return;const target=el.matches('button')?el.querySelector('b')||el:el;target.textContent=tr(key);});
+      const set=(selector,text,aria)=>{const el=document.querySelector(selector);if(!el)return;if(text!==null)el.textContent=text;if(aria)el.setAttribute('aria-label',aria);};
+      set('.toolbar',null,tr('toolbar'));set('#overview-btn',null,tr('backOverview'));set('#list-btn',null,tr('openDirectory'));set('#help-btn',null,tr('showHelp'));
+      set('#catalog-panel',null,tr('directory'));set('#catalog-close','×',`${tr('close')} ${tr('directory')}`);set('#detail-panel',null,tr('detail'));set('#detail-close','×',`${tr('close')} ${tr('detail')}`);set('#detail-back',`← ${tr('backList')}`);
+      const search=document.querySelector('#catalog-search');search.placeholder=tr('search');search.setAttribute('aria-label',tr('search'));
+      set('.hud',null,tr('controls'));set('#hud-toggle',null,tr('time'));document.querySelector('#hud-toggle b').textContent=tr('time');set('#log-filter',null,tr('filterFlow'));set('#log-close','×',`${tr('close')} ${tr('systemLog')}`);
+      set('#help-close','×',`${tr('close')} ${tr('help')}`);set('#help-title',tr('tutorialTitle'));set('#tutorial-progress',null,tr('tutorialProgress'));set('#tutorial-prev',tr('previous'));set('#tutorial-skip',tr('skip'));set('#tutorial-next',tr('next'));
+      set('#status-title',tr('loading'));set('#status-message',tr('loadingMessage'));set('#reload-btn',tr('reload'));
+      document.querySelectorAll('.sheet-handle').forEach(handle=>{const label=handle.dataset.sheet==='catalog'?tr('directory'):tr('detail');handle.textContent=label;handle.setAttribute('aria-label',`${tr('expand')} ${label}`);});
+    }
+    applyStaticTranslations();
+
+    function showError(title, error) {
+      console.error(error);
+      statusEl.classList.remove('is-hidden');
+      statusEl.classList.add('is-error');
+      statusTitle.textContent = title;
+      statusMessage.textContent = error instanceof Error ? error.message : String(error);
+      document.querySelector('#reload-btn').hidden=false;
+    }
+    document.querySelector('#reload-btn').addEventListener('click',()=>location.reload());
+    window.addEventListener('error', event => showError(tr('sceneError'), event.error || event.message));
+    window.addEventListener('unhandledrejection', event => { event.preventDefault(); showError(tr('loadIncomplete'), event.reason); });
+
+    (async function start() {
+      try {
+        statusMessage.textContent = tr('loadingEngine');
+        const [THREE, controlsModule, labelsModule] = await Promise.all([
+          import('three'),
+          import('three/addons/controls/OrbitControls.js'),
+          import('three/addons/renderers/CSS2DRenderer.js')
+        ]);
+        init(THREE, controlsModule.OrbitControls, labelsModule.CSS2DRenderer, labelsModule.CSS2DObject);
+      } catch (error) {
+        showError(tr('engineError'), new Error(tr('engineHint')+'\n' + (error?.message || error)));
+      }
+    })();
+
+    function init(THREE, OrbitControls, CSS2DRenderer, CSS2DObject) {
+      let renderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false, powerPreference:'high-performance' });
+      } catch (error) {
+        showError(tr('webglError'), new Error(tr('webglHint')+'\n' + error.message));
+        return;
+      }
+      if (!renderer.getContext()) {
+        showError(tr('webglError'), new Error(tr('webglHint')));
+        return;
+      }
+
+      const reducedQuery = matchMedia('(prefers-reduced-motion: reduce)');
+      let reducedMotion = reducedQuery.matches;
+      const seed = 0xA91F5EED;
+      const rng = mulberry32(seed);
+      const artRng = mulberry32(DATA.artDirection.seed);
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x87bac8, 0.0058);
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
+      camera.position.set(68, 66, 82);
+
+      renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth <= DATA.stage5.mobileBreakpoint ? DATA.stage5.mobilePixelRatio : 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      const labelRenderer = new CSS2DRenderer();
+      labelRenderer.domElement.style.position = 'absolute';
+      labelRenderer.domElement.style.inset = '0';
+      labelRenderer.domElement.style.pointerEvents = 'none';
+      container.appendChild(labelRenderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 0, -2);
+      controls.enableDamping = !reducedMotion;
+      controls.dampingFactor = 0.055;
+      controls.minDistance = 18;
+      controls.maxDistance = 180;
+      controls.maxPolarAngle = Math.PI * 0.465;
+      const defaultMaxPolarAngle=controls.maxPolarAngle;
+      const overviewDirection=camera.position.clone().sub(controls.target).normalize();
+
+      const hemi = new THREE.HemisphereLight(0xd9eff0, 0x4b493c, 0.72);
+      scene.add(hemi);
+      const sun = new THREE.DirectionalLight(0xfff2cf, 1.55);
+      sun.position.set(42, 68, -28);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      sun.shadow.camera.left = sun.shadow.camera.bottom = -75;
+      sun.shadow.camera.right = sun.shadow.camera.top = 75;
+      sun.shadow.camera.near = 2;
+      sun.shadow.camera.far = 180;
+      sun.shadow.bias = -0.00035;
+      sun.shadow.normalBias = 0.025;
+      sun.shadow.radius = DATA.artDirection.shadowRadius;
+      scene.add(sun, sun.target);
+      const ambient = new THREE.AmbientLight(0xc8b99f, 0.22);
+      scene.add(ambient);
+
+      const skyUniforms = {
+        topColor:{ value:new THREE.Color('#2389bb') }, bottomColor:{ value:new THREE.Color('#bdeeff') },
+        sunColor:{ value:new THREE.Color('#fff2cf') }, sunDirection:{ value:new THREE.Vector3(0.5,0.7,-0.3).normalize() }
+      };
+      const sky = new THREE.Mesh(new THREE.SphereGeometry(260, 32, 18), new THREE.ShaderMaterial({
+        side:THREE.BackSide, depthWrite:false, fog:false, uniforms:skyUniforms,
+        vertexShader:`varying vec3 vWorld; void main(){ vec4 w=modelMatrix*vec4(position,1.0); vWorld=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`,
+        fragmentShader:`uniform vec3 topColor; uniform vec3 bottomColor; uniform vec3 sunColor; uniform vec3 sunDirection; varying vec3 vWorld; void main(){ vec3 d=normalize(vWorld-cameraPosition); float h=smoothstep(-0.12,0.82,d.y); float glow=pow(max(dot(d,sunDirection),0.0),180.0); vec3 c=mix(bottomColor,topColor,h)+sunColor*glow*1.3; gl_FragColor=vec4(c,1.0); }`
+      }));
+      scene.add(sky);
+
+      const waterUniforms = {
+        uTime:{ value:0 }, uColor:{ value:new THREE.Color('#14728c') }, uFogColor:{ value:scene.fog.color },
+        uFogDensity:{ value:scene.fog.density }, uSun:{ value:new THREE.Vector3(0.5,0.7,-0.3).normalize() }
+      };
+      const water = new THREE.Mesh(new THREE.PlaneGeometry(320, 320, 110, 110), new THREE.ShaderMaterial({
+        transparent:false, uniforms:waterUniforms,
+        vertexShader:`uniform float uTime; varying vec3 vWorld; varying float vWave; void main(){ vec3 p=position; float w=sin(p.x*.115+uTime*.65)*.16+cos(p.y*.09-uTime*.48)*.12+sin((p.x+p.y)*.045+uTime*.33)*.09; p.z+=w; vWave=w; vec4 world=modelMatrix*vec4(p,1.0); vWorld=world.xyz; gl_Position=projectionMatrix*viewMatrix*world; }`,
+        fragmentShader:`uniform vec3 uColor; uniform vec3 uFogColor; uniform float uFogDensity; uniform vec3 uSun; varying vec3 vWorld; varying float vWave; void main(){ vec3 V=normalize(cameraPosition-vWorld); float fres=pow(1.0-max(V.y,0.0),2.5); float glint=pow(max(dot(normalize(vec3(-.12,1.0,.16)),uSun),0.0),18.0); vec3 c=uColor+vec3(.05,.22,.26)*fres+glint*.08+vWave*.08; float dist=length(cameraPosition-vWorld); float fog=1.0-exp(-uFogDensity*uFogDensity*dist*dist); gl_FragColor=vec4(mix(c,uFogColor,clamp(fog,0.0,1.0)),1.0); }`
+      }));
+      water.rotation.x = -Math.PI / 2;
+      water.position.y = -1.28;
+      scene.add(water);
+
+      const groundTexture = makeGroundTexture(THREE, rng);
+      const patternTexture = makePatternTexture(THREE);
+      const city = new THREE.Group();
+      scene.add(city);
+      const ISLAND_RADIUS = 9.2;
+      const GRID_RADIUS = 11.25;
+      const islandById = new Map();
+      const coordMap = new Map();
+      const roadGraph = new Map();
+      const servicePositions = new Map();
+      const serviceById = new Map(DATA.domains.flatMap(domain=>domain.services.map(service=>[service.id,service])));
+      const domainByService = new Map(DATA.domains.flatMap(domain=>domain.services.map(service=>[service.id,domain])));
+      const neighborDirs = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+      const partBuckets = { static:[], near:[], glow:[] };
+      const partOwners = { static:[], near:[], glow:[] };
+      const serviceInstances = new Map();
+      const instanceLookup = new WeakMap();
+      const selectableServiceMeshes = [];
+      const islandPickMeshes = [];
+      const islandLabels = new Map();
+      const servicePins = new Map();
+      const servicePinLines = new Map();
+      const flowRoutes = new Map();
+      const flowMeshes = new Map();
+      const flowPickMeshes = [];
+      const walkers = [];
+      const walkerById = new Map();
+      const walkerInstanceLookup = new WeakMap();
+      const walkerPickMeshes = [];
+      const walkerLabels = new Map();
+      const badgeResources = new Map();
+      const nearMeshes = [];
+      const nightMaterials = [];
+      const silhouetteMaterials = [];
+      let cloudField = null;
+      let stage2DrawCalls = 0;
+
+      statusMessage.textContent = '生成 12 座島嶼、步道與跨島橋梁…';
+      DATA.domains.forEach((domain, islandIndex) => {
+        const [q,r] = domain.axial;
+        const center = new THREE.Vector3(Math.sqrt(3)*GRID_RADIUS*(q+r/2), 0, 1.5*GRID_RADIUS*r);
+        const vertices = Array.from({length:6}, (_, i) => {
+          const angle = THREE.MathUtils.degToRad(30 + i*60);
+          const radius = ISLAND_RADIUS * (0.92 + rng()*0.13);
+          return new THREE.Vector2(Math.cos(angle)*radius, Math.sin(angle)*radius);
+        });
+        const group = new THREE.Group();
+        group.position.copy(center);
+        group.userData.domain = domain;
+        city.add(group);
+        createIsland(group, domain, vertices, islandIndex);
+        const edgeMidpoints = Array.from({length:6}, (_, dir) => {
+          const start = (5-dir+6)%6;
+          return new THREE.Vector3((vertices[start].x+vertices[(start+1)%6].x)/2, .3, (vertices[start].y+vertices[(start+1)%6].y)/2).add(center);
+        });
+        islandById.set(domain.id, { domain, center, vertices, edgeMidpoints, group });
+        coordMap.set(`${q},${r}`, domain.id);
+        createRoadNodes(domain, center, edgeMidpoints);
+
+        const label = document.createElement('div');
+        label.className = 'island-label';
+        label.textContent = localize(domain);
+        label.dataset.full = localize(domain);
+        label.dataset.short = localize(domain).slice(0,2);
+        const labelObject = new CSS2DObject(label);
+        labelObject.position.set(0, 4.35, 0);
+        group.add(labelObject);
+        islandLabels.set(domain.id,{element:label,object:labelObject});
+      });
+
+      const bridges = [];
+      DATA.domains.forEach(domain => {
+        const source = islandById.get(domain.id);
+        neighborDirs.forEach((dir, dirIndex) => {
+          const neighborId = coordMap.get(`${domain.axial[0]+dir[0]},${domain.axial[1]+dir[1]}`);
+          if (!neighborId || domain.id.localeCompare(neighborId) >= 0) return;
+          const target = islandById.get(neighborId);
+          const opposite = (dirIndex + 3) % 6;
+          createBridge(source.edgeMidpoints[dirIndex], target.edgeMidpoints[opposite], domain.id, neighborId);
+          addGraphEdge(`${domain.id}:edge:${dirIndex}`, `${neighborId}:edge:${opposite}`);
+        });
+      });
+
+      statusMessage.textContent = '組裝服務建物、街道家具與背景地形…';
+      buildServiceModels();
+      buildIslandFurniture();
+      buildEnvironment();
+      instantiatePartLibrary();
+
+      function createIsland(group, domain, vertices, index) {
+        const shape = polygonShape(THREE, vertices);
+        const wallGeo = new THREE.ExtrudeGeometry(shape, { depth:1.65, bevelEnabled:false, curveSegments:1 });
+        wallGeo.rotateX(Math.PI/2);
+        const wall = new THREE.Mesh(wallGeo, [
+          new THREE.MeshStandardMaterial({ map:groundTexture, color:new THREE.Color(domain.color).lerp(new THREE.Color('#72906e'),.72), roughness:.93 }),
+          new THREE.MeshStandardMaterial({ color:index%2 ? 0x34524c : 0x3d5d50, roughness:1 })
+        ]);
+        wall.position.y = .35;
+        wall.receiveShadow = true;
+        wall.castShadow = true;
+        wall.userData.domainId=domain.id;
+        islandPickMeshes.push(wall);
+        group.add(wall);
+
+        const shallow = ringMesh(vertices, 1.20, 0.18, new THREE.MeshBasicMaterial({ color:0x72d7dc, transparent:true, opacity:.25, depthWrite:false }));
+        shallow.position.y = -1.18;
+        group.add(shallow);
+        const foam = ringMesh(vertices, 1.055, .065, new THREE.MeshBasicMaterial({ color:0xdcffff, transparent:true, opacity:.72, depthWrite:false }));
+        foam.position.y = -1.08;
+        group.add(foam);
+
+        const path = ringMesh(vertices, .71, .16, new THREE.MeshStandardMaterial({ color:0x8fa69f, roughness:.88 }));
+        path.position.y = .43;
+        path.receiveShadow = true;
+        group.add(path);
+        const pattern = ringMesh(vertices, .53, .07, new THREE.MeshStandardMaterial({ map:patternTexture, color:new THREE.Color(domain.color).lerp(new THREE.Color('#ffffff'),.36), roughness:.7 }));
+        pattern.position.y = .455;
+        group.add(pattern);
+
+        const curbPoints = vertices.map(v => new THREE.Vector3(v.x*.79,.49,v.y*.79));
+        curbPoints.push(curbPoints[0].clone());
+        const curbCurve = new THREE.CatmullRomCurve3(curbPoints, true, 'centripetal', .15);
+        const curb = new THREE.Mesh(new THREE.TubeGeometry(curbCurve, 72, .095, 5, true), new THREE.MeshStandardMaterial({ color:0xc7d5cd, roughness:.75 }));
+        curb.castShadow = true;
+        group.add(curb);
+      }
+
+      function createRoadNodes(domain, center, edges) {
+        const local = [];
+        for (let i=0;i<6;i++) {
+          const a = i*Math.PI/3;
+          local.push(new THREE.Vector3(Math.cos(a)*4.4,.55,Math.sin(a)*4.4).add(center));
+        }
+        for (let i=0;i<6;i++) local.push(edges[i].clone().setY(.55));
+        local.forEach((position, i) => roadGraph.set(`${domain.id}:${i<6?'ring':'edge'}:${i<6?i:i-6}`, { id:`${domain.id}:${i<6?'ring':'edge'}:${i<6?i:i-6}`, position, links:new Set() }));
+        for (let i=0;i<6;i++) {
+          addGraphEdge(`${domain.id}:ring:${i}`, `${domain.id}:ring:${(i+1)%6}`);
+          addGraphEdge(`${domain.id}:ring:${i}`, `${domain.id}:edge:${i}`);
+        }
+      }
+
+      function addGraphEdge(a,b) {
+        const nodeA=roadGraph.get(a), nodeB=roadGraph.get(b);
+        if (!nodeA || !nodeB) return;
+        nodeA.links.add(b); nodeB.links.add(a);
+      }
+
+      function createBridge(a,b,from,to) {
+        const mid = a.clone().add(b).multiplyScalar(.5);
+        const length = a.distanceTo(b);
+        const yaw = Math.atan2(b.x-a.x, b.z-a.z);
+        const bridge = new THREE.Group();
+        bridge.position.copy(mid);
+        bridge.rotation.y = yaw;
+        const deck = new THREE.Mesh(new THREE.BoxGeometry(2.15,.24,length+.35,1,1,10), new THREE.MeshStandardMaterial({ color:0xaebbb5, roughness:.78 }));
+        deck.geometry.translate(0,0,0);
+        deck.position.y = .48;
+        deck.castShadow = true; deck.receiveShadow = true;
+        bridge.add(deck);
+        const railMat = new THREE.MeshStandardMaterial({ color:0x58777b, roughness:.7 });
+        [-.98,.98].forEach(x => {
+          const rail = new THREE.Mesh(new THREE.TorusGeometry(length*.58, .055, 5, 22, Math.PI*.62), railMat);
+          rail.rotation.set(0,0,Math.PI/2);
+          rail.scale.set(1,1,.66);
+          rail.position.set(x,.72,-length*.29);
+          bridge.add(rail);
+        });
+        bridge.userData = { from, to };
+        city.add(bridge); bridges.push(bridge);
+      }
+
+      function ringMesh(vertices, outerScale, width, material) {
+        const outer = vertices.map(v => v.clone().multiplyScalar(outerScale));
+        const inner = vertices.map(v => v.clone().multiplyScalar(Math.max(.05,outerScale-width)));
+        const shape = polygonShape(THREE, outer);
+        const hole = new THREE.Path();
+        hole.moveTo(inner[inner.length-1].x, inner[inner.length-1].y);
+        for (let i=inner.length-2;i>=0;i--) hole.lineTo(inner[i].x,inner[i].y);
+        hole.closePath(); shape.holes.push(hole);
+        const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), material);
+        mesh.rotation.x = Math.PI/2;
+        return mesh;
+      }
+
+      function polygonShape(T, vertices) {
+        const shape = new T.Shape();
+        shape.moveTo(vertices[0].x,vertices[0].y);
+        for(let i=1;i<vertices.length;i++) shape.lineTo(vertices[i].x,vertices[i].y);
+        shape.closePath(); return shape;
+      }
+
+      function addPart(bucket, kind, position, scale, color, serviceId=null, rotation=[0,0,0]) {
+        if (!DATA.stage2.partKinds.includes(kind)) throw new Error(`不支援的零件種類：${kind}`);
+        const jitter = DATA.stage2.scaleJitter;
+        const s = new THREE.Vector3(...scale).multiply(new THREE.Vector3(
+          1+(rng()*2-1)*jitter, 1+(rng()*2-1)*jitter, 1+(rng()*2-1)*jitter
+        ));
+        const matrix = new THREE.Matrix4().compose(
+          new THREE.Vector3(...position),
+          new THREE.Quaternion().setFromEuler(new THREE.Euler(...rotation)),
+          s
+        );
+        partBuckets[bucket].push({ kind, matrix, color });
+        partOwners[bucket].push(serviceId);
+      }
+
+      function buildServiceModels() {
+        const positions = DATA.stage2.serviceGrid;
+        DATA.domains.forEach(domain => {
+          const island = islandById.get(domain.id);
+          domain.services.forEach((service, index) => {
+            const archetype = DATA.modelCatalog[service.model];
+            if (!archetype) throw new Error(`服務 ${service.id} 使用未知 model：${service.model}`);
+            const local = index===0 ? DATA.stage2.mainBuildingPosition : positions[index-1];
+            const size = index===0 ? DATA.stage2.mainBuildingScale : .82 + (index%2)*.05;
+            const origin=[island.center.x+local[0], .48, island.center.z+local[1]];
+            servicePositions.set(service.id,new THREE.Vector3(...origin));
+            buildArchetype(archetype, origin, size, service.id, index===0 && artRng()<DATA.artDirection.friendlyMainFaceChance);
+          });
+        });
+      }
+
+      function buildArchetype(type, origin, size, serviceId, friendlyFace=false) {
+        const p=DATA.palette;
+        const at=(x,y,z)=>[origin[0]+x*size,origin[1]+y*size,origin[2]+z*size];
+        const secure=['vault','lock','token'].includes(type), balanced=type==='load-balancer';
+        const normal=balanced?p.teal:secure?p.blush:p.cream, stone=balanced?p.darkTeal:secure?p.stone:p.softStone;
+        const part=(kind,x,y,z,sx,sy,sz,color=normal,rot=[0,0,0],bucket='static')=>addPart(bucket,kind,at(x,y,z),[sx*size,sy*size,sz*size],color,serviceId,rot);
+        const face=(y,z,spread=.18)=>{if(!friendlyFace)return;[-spread,spread].forEach(x=>part('sphere',x,y,z,.065,.085,.055,p.ink));};
+        part('cylinder',0,.10,0,1.46,.20,1.46,p.darkStone);
+        switch(type) {
+          case 'server-array':
+            part('rbox',0,.62,0,1.78,1.02,1.26,p.warmCream);
+            [-.53,0,.53].forEach((x,i)=>{part('rbox',x,.66,.03,.43,.76,.88,i===1?normal:stone);part('glowsphere',x,.78,.50,.105,.105,.065,p.window,[0,0,0],'glow');});
+            face(.58,.51,.19);
+            break;
+          case 'api-gateway':
+            part('rbox',-.67,.69,0,.48,1.16,.74,stone);part('rbox',.67,.69,0,.48,1.16,.74,stone);
+            part('torus',0,1.18,.02,.90,.90,.22,normal);part('dome',-.67,1.30,0,.50,.24,.76,p.warmCream);part('dome',.67,1.30,0,.50,.24,.76,p.warmCream);
+            part('rbox',0,.23,-.08,1.30,.18,.76,normal);part('glowsphere',0,1.30,.13,.16,.16,.09,p.window,[0,0,0],'glow');
+            break;
+          case 'database':
+            part('cylinder',0,.66,0,1.28,1.12,1.28,normal);[.24,.62,1.00].forEach(y=>part('torus',0,y,0,1.14,1.14,.10,stone,[Math.PI/2,0,0]));
+            part('dome',0,1.24,0,1.27,.42,1.27,p.warmCream);part('glowsphere',0,.69,.64,.11,.11,.065,p.window,[0,0,0],'glow');face(.76,.64,.18);
+            break;
+          case 'vault':
+            part('rbox',0,.70,0,1.72,1.25,1.34,normal);part('rbox',0,.70,.67,1.40,1.00,.12,p.warmCream);part('torus',0,.72,.76,.47,.47,.11,p.coral);
+            part('cylinder',0,.72,.80,.24,.17,.24,p.darkStone,[Math.PI/2,0,0]);part('sphere',0,.47,.84,.075,.11,.06,p.ink);part('rbox',0,.36,.84,.055,.13,.045,p.ink);face(1.03,.75,.45);
+            break;
+          case 'adapter':
+            part('rbox',0,.51,0,1.72,.72,1.16,normal);part('dome',0,.93,0,1.00,.34,.82,p.warmCream);part('cylinder',0,1.28,0,.13,.44,.13,stone);
+            part('torus',0,1.65,.02,.48,.34,.10,p.coral,[.28,0,0]);part('sphere',0,1.65,.04,.15,.12,.10,p.window);face(.55,.59,.20);
+            break;
+          case 'lock':
+            part('rbox',0,.61,0,1.52,1.05,1.14,normal);part('torus',0,1.18,.02,.65,.74,.19,p.coral);part('sphere',0,.64,.60,.105,.15,.075,p.ink);part('rbox',0,.48,.60,.07,.18,.06,p.ink);
+            break;
+          case 'token':
+            part('rbox',0,.27,0,1.38,.34,1.00,p.warmCream);part('cylinder',0,.82,.02,1.08,.32,1.08,normal,[Math.PI/2,0,0]);part('torus',0,.82,.20,.75,.75,.10,p.coral);
+            part('sphere',-.22,.82,.37,.17,.17,.07,p.warmCream);part('rbox',.16,.82,.38,.55,.13,.07,p.warmCream);part('rbox',.36,.69,.39,.12,.22,.07,p.warmCream);
+            break;
+          case 'clock':
+            part('rbox',0,.31,0,.82,.45,.72,stone);part('cylinder',0,.91,.08,1.12,.28,1.12,normal,[Math.PI/2,0,0]);part('cylinder',0,.91,.24,.91,.12,.91,p.warmCream,[Math.PI/2,0,0]);
+            part('rbox',0,1.02,.32,.065,.34,.045,p.ink,[0,0,-.38]);part('rbox',.12,.84,.33,.32,.06,.045,p.ink,[0,0,.20]);[-.43,.43].forEach(x=>part('sphere',x,1.48,.02,.30,.22,.30,p.coral));
+            break;
+          case 'globe':
+            part('rbox',0,.22,0,1.10,.28,.78,stone);part('torus',0,.76,0,.83,.98,.12,p.darkStone,[0,0,-.20]);part('sphere',0,.86,0,.78,.78,.78,normal);
+            part('torus',0,.86,0,.80,.80,.045,p.teal);part('torus',0,.86,0,.80,.80,.045,p.teal,[0,Math.PI/2,0]);
+            break;
+          case 'load-balancer':
+            part('rbox',-.58,.57,0,.74,.92,1.02,normal);part('rbox',.58,.57,0,.74,.92,1.02,normal);part('sphere',0,1.05,.02,.34,.34,.34,p.warmCream);
+            part('torus',0,1.05,.04,.47,.47,.10,p.coral);[-.58,.58].forEach(x=>part('glowsphere',x,.61,.53,.15,.15,.07,p.window,[0,0,0],'glow'));
+            break;
+          case 'message-queue':
+            part('rbox',0,.58,0,1.82,.88,1.12,normal);part('dome',0,1.08,0,1.08,.32,.78,p.warmCream);
+            [-.55,0,.55].forEach((x,i)=>{part('rbox',x,.64,.59,.40,.31,.10,i===1?p.coral:stone);part('prism',x,.73,.66,.23,.16,.06,p.warmCream,[0,0,Math.PI/2]);});face(.40,.60,.23);
+            break;
+          case 'monolith':
+            part('rbox',0,.79,0,1.78,1.42,1.30,normal);part('dome',0,1.53,0,1.08,.32,.91,stone);
+            [-.46,0,.46].forEach(x=>part('glowbox',x,.83,.66,.24,.49,.045,p.window,[0,0,0],'glow'));part('rbox',0,.29,.67,.42,.34,.08,p.teal);face(1.27,.66,.25);
+            break;
+          default: throw new Error(`缺少模型原型：${type}`);
+        }
+      }
+
+      function buildIslandFurniture() {
+        const p=DATA.palette;
+        DATA.domains.forEach((domain,islandIndex)=>{
+          const island=islandById.get(domain.id), verts=island.vertices, c=island.center;
+          verts.forEach(v=>{
+            const x=c.x+v.x, z=c.z+v.y;
+            addPart('static','cylinder',[x,.88,z],[.12,.72,.12],p.darkStone);
+            addPart('static','dome',[x,1.58,z],[.38,.22,.38],p.warmCream);
+            addPart('glow','glowsphere',[x,1.48,z],[.19,.14,.19],p.lamp);
+            addPart('glow','glowsphere',[x,.53,z],[1.05,.025,1.05],p.lamp);
+          });
+          for(let edge=0;edge<6;edge++) {
+            const a=verts[edge], b=verts[(edge+1)%6];
+            const planterT=edge%2?.28:.72;
+            const mx=c.x+THREE.MathUtils.lerp(a.x,b.x,planterT)*.90, mz=c.z+THREE.MathUtils.lerp(a.y,b.y,planterT)*.90;
+            addPart('static','cylinder',[mx,.63,mz],[.54,.29,.54],p.clay);
+            addPart('static','dome',[mx,.91,mz],[.54,.34,.54],edge%2?p.leaf:p.darkLeaf);
+            [-.24,.24].forEach((dx,petal)=>{addPart('static','sphere',[mx+dx,.99,mz],[.14,.12,.14],petal?p.flower:p.warmCream);});
+            for(let j=1;j<=2;j++) {
+              const t=j/3, x=c.x+THREE.MathUtils.lerp(a.x,b.x,t)*.94, z=c.z+THREE.MathUtils.lerp(a.y,b.y,t)*.94;
+              addPart('glow','glowsphere',[x,.63,z],[.075,.075,.075],p.lamp);
+            }
+          }
+          const treeCount=DATA.stage2.treesPerIsland[islandIndex];
+          for(let i=0;i<treeCount;i++) {
+            const angle=(i/treeCount)*Math.PI*2 + .24 + islandIndex*.11;
+            const radius=7.15+(i%2)*.3, x=c.x+Math.cos(angle)*radius, z=c.z+Math.sin(angle)*radius;
+            addPart('static','cylinder',[x,.99,z],[.23,.86,.23],p.trunk);
+            const form=islandIndex%3;
+            const wobble=(artRng()-.5)*.12;
+            if(form===0) { addPart('static','sphere',[x-.27,2.08,z],[.72,.63,.72],p.darkLeaf);addPart('static','sphere',[x+.28,2.12,z+.05],[.70,.65,.70],p.leaf);addPart('static','dome',[x,2.55+wobble,z],[.78,.50,.78],p.leaf); }
+            else if(form===1) { addPart('static','ico',[x-.30,2.11,z],[.68,.70,.68],p.leaf);addPart('static','ico',[x+.30,2.17,z+.08],[.66,.72,.66],p.darkLeaf);addPart('static','sphere',[x,2.54+wobble,z-.04],[.62,.57,.62],p.leaf); }
+            else { addPart('static','dome',[x,2.02,z],[.92,.62,.92],p.darkLeaf);addPart('static','sphere',[x-.22,2.40+wobble,z],[.60,.54,.60],p.leaf);addPart('static','sphere',[x+.25,2.43,z+.08],[.57,.52,.57],p.leaf); }
+          }
+          [-1,1].forEach(side=>{
+            const x=c.x+side*3.4,z=c.z+.25;
+            addPart('near','rbox',[x,.72,z],[.62,.56,.50],p.softStone);
+            addPart('near','glowbox',[x,.80,z+.46],[.22,.18,.025],p.window);
+          });
+        });
+      }
+
+      function buildEnvironment() {
+        const env=DATA.environment, envRng=mulberry32(env.seed), simplex=new SimplexNoise2D(envRng);
+        const fbm=(x,z)=>{ let sum=0,amp=.55,freq=.035; for(let o=0;o<4;o++){ sum+=simplex.noise2D(x*freq,z*freq)*amp; freq*=2.08;amp*=.5; } return sum; };
+        const terrainHeight=(x,z)=>{
+          const radius=Math.hypot(x,z), ring=Math.exp(-Math.pow((radius-47)/17,2));
+          let height=-3.2+ring*(8.0+fbm(x,z)*5.2)+Math.max(0,radius-66)*.08;
+          height=Math.round(height*1.35)/1.35;
+          if(z>14) height=THREE.MathUtils.lerp(-2.4,height,.34);
+          return height;
+        };
+        const geo=new THREE.PlaneGeometry(env.terrainSize,env.terrainSize,env.terrainSegments,env.terrainSegments);
+        const pos=geo.attributes.position, colors=[];
+        const low=new THREE.Color('#344f4b'),mid=new THREE.Color('#6f8465'),high=new THREE.Color('#b6ad83'),color=new THREE.Color();
+        for(let i=0;i<pos.count;i++){
+          const x=pos.getX(i), z=-pos.getY(i), h=terrainHeight(x,z); pos.setZ(i,h);
+          const t=THREE.MathUtils.clamp((h+3)/12,0,1); color.copy(t<.55?low:mid).lerp(t<.55?mid:high,t<.55?t/.55:(t-.55)/.45); colors.push(color.r,color.g,color.b);
+        }
+        geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3)); geo.rotateX(-Math.PI/2); geo.computeVertexNormals();
+        const terrain=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true,side:THREE.DoubleSide}));
+        terrain.receiveShadow=true; scene.add(terrain);
+
+        const coniferGeo=mergeSimpleGeometries([
+          transformed(new THREE.ConeGeometry(.78,1.05,8),[0,.53,0]), transformed(new THREE.ConeGeometry(.66,.92,8),[0,1.00,0]), transformed(new THREE.ConeGeometry(.51,.78,8),[0,1.42,0])
+        ]);
+        const broadGeo=mergeSimpleGeometries([
+          jitteredIco(-.25,.75,0,.58), jitteredIco(.27,.82,.06,.61),
+          jitteredIco(0,1.23,-.18,.54), jitteredIco(.05,1.05,.32,.47)
+        ]);
+        const count=innerWidth<=DATA.stage5.mobileBreakpoint?env.mobileTreeCount:env.desktopTreeCount, placements=[[],[]];
+        for(let tries=0;tries<count*12 && placements[0].length+placements[1].length<count;tries++){
+          const radius=THREE.MathUtils.lerp(env.treeRadius[0],env.treeRadius[1],Math.sqrt(envRng())), angle=envRng()*Math.PI*2;
+          const x=Math.cos(angle)*radius,z=Math.sin(angle)*radius,h=terrainHeight(x,z);
+          if(h<-.6 || [...islandById.values()].some(v=>Math.hypot(v.center.x-x,v.center.z-z)<10.5)) continue;
+          const type=envRng()<.58?0:1,scale=.7+envRng()*.65;
+          placements[type].push(new THREE.Matrix4().compose(new THREE.Vector3(x,h,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(0,envRng()*Math.PI*2,0)),new THREE.Vector3(scale,scale,scale)));
+        }
+        [coniferGeo,broadGeo].forEach((treeGeo,type)=>{
+          const mesh=new THREE.InstancedMesh(treeGeo,new THREE.MeshStandardMaterial({color:type?DATA.palette.leaf:DATA.palette.darkLeaf,roughness:1,flatShading:true}),placements[type].length);
+          placements[type].forEach((m,i)=>{mesh.setMatrixAt(i,m); mesh.setColorAt(i,new THREE.Color(type?(i%3?'#6f936c':'#82a578'):(i%3?'#4f765e':'#638567')));});
+          mesh.instanceMatrix.needsUpdate=true; mesh.castShadow=false; mesh.receiveShadow=false; scene.add(mesh);
+        });
+
+        env.mountainRings.forEach((ring,ringIndex)=>{
+          const points=96, vertices=[];
+          for(let i=0;i<points;i++){
+            const a=i/points*Math.PI*2,b=(i+1)/points*Math.PI*2;
+            const ha=ring.height*(.55+envRng()*.5),hb=ring.height*(.55+envRng()*.5),base=-3;
+            vertices.push(Math.cos(a)*ring.radius,base,Math.sin(a)*ring.radius, Math.cos(b)*ring.radius,base,Math.sin(b)*ring.radius, Math.cos(a)*ring.radius,ha,Math.sin(a)*ring.radius,
+              Math.cos(b)*ring.radius,base,Math.sin(b)*ring.radius, Math.cos(b)*ring.radius,hb,Math.sin(b)*ring.radius, Math.cos(a)*ring.radius,ha,Math.sin(a)*ring.radius);
+          }
+          const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3)); g.computeVertexNormals();
+          const mat=new THREE.MeshBasicMaterial({color:ring.color,side:THREE.DoubleSide,fog:true}); mat.userData.ringIndex=ringIndex; silhouetteMaterials.push(mat); scene.add(new THREE.Mesh(g,mat));
+        });
+
+        const cloudGroups=[]; let puffCount=0;
+        for(let g=0;g<env.cloudGroups;g++){
+          const group={x:-72+envRng()*144,y:24+envRng()*18,z:-58+envRng()*96,phase:envRng()*20,puffs:[]};
+          const n=5+Math.floor(envRng()*4);
+          for(let i=0;i<n;i++) group.puffs.push({x:(i-(n-1)/2)*1.18+(envRng()-.5),y:(envRng()-.4)*.8,z:(envRng()-.5)*2.2,s:.75+envRng()*.72});
+          puffCount+=n; cloudGroups.push(group);
+        }
+        const cloudMesh=new THREE.InstancedMesh(new THREE.SphereGeometry(1,9,6),new THREE.MeshLambertMaterial({color:DATA.palette.cloud,transparent:true,opacity:.72,depthWrite:false}),puffCount);
+        const updateCloudMatrices=()=>{ let index=0; for(const group of cloudGroups) for(const puff of group.puffs){ const s=puff.s; cloudMesh.setMatrixAt(index++,new THREE.Matrix4().compose(new THREE.Vector3(group.x+puff.x,group.y+puff.y,group.z+puff.z),new THREE.Quaternion(),new THREE.Vector3(s*1.65,s*.72,s))); } cloudMesh.instanceMatrix.needsUpdate=true; };
+        updateCloudMatrices(); cloudMesh.frustumCulled=false; scene.add(cloudMesh);
+        cloudField={ update(delta){ cloudGroups.forEach(group=>{ group.x+=env.cloudSpeed*delta; if(group.x>82)group.x=-82; }); updateCloudMatrices(); } };
+
+        env.marine.forEach(item=>{
+          const [x,z]=item.position,s=item.scale;
+          if(item.kind==='islet'){
+            addPart('static','ico',[x,-.75,z],[3.4*s,.65*s,2.5*s],'#5c7863'); addPart('static','cone',[x,1.0,z],[.65*s,2.0*s,.65*s],DATA.palette.darkLeaf);
+          } else if(item.kind==='tower'){
+            addPart('static','cylinder',[x,.5,z],[.42*s,3.4*s,.42*s],DATA.palette.stone); addPart('static','torus',[x,3.25,z],[1.0*s,1.0*s,.08*s],DATA.palette.coral,null,[Math.PI/2,0,0]);
+            addPart('glow','glowsphere',[x,3.35,z],[.18,.18,.18],DATA.palette.lamp);
+          } else {
+            addPart('static','rbox',[x,-.78,z],[2.3*s,.38*s,.78*s],DATA.palette.cream); addPart('static','box',[x,-.30,z],[.72*s,.54*s,.62*s],DATA.palette.coral);
+            addPart('static','cylinder',[x+.25,.55,z],[.05*s,1.05*s,.05*s],DATA.palette.darkStone);
+          }
+        });
+
+        function transformed(geometry,translation){ geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(...translation)); return geometry; }
+        function jitteredIco(x,y,z,size){
+          const geometry=new THREE.IcosahedronGeometry(1,0),j=()=>1+(envRng()-.5)*.16;
+          geometry.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(x+(envRng()-.5)*.14,y+(envRng()-.5)*.12,z+(envRng()-.5)*.14),new THREE.Quaternion(),new THREE.Vector3(size*j(),size*j(),size*j())));
+          return geometry;
+        }
+        function mergeSimpleGeometries(geometries){
+          const positions=[],normals=[];
+          geometries.forEach(g=>{ const n=g.index?g.toNonIndexed():g; positions.push(...n.attributes.position.array); normals.push(...n.attributes.normal.array); });
+          const merged=new THREE.BufferGeometry(); merged.setAttribute('position',new THREE.Float32BufferAttribute(positions,3)); merged.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3)); return merged;
+        }
+      }
+
+      function instantiatePartLibrary() {
+        const geometries={
+          box:new THREE.BoxGeometry(1,1,1), rbox:makeRoundedBoxGeometry(), cylinder:new THREE.CylinderGeometry(.5,.5,1,12),
+          cone:new THREE.ConeGeometry(.5,1,12), sphere:new THREE.SphereGeometry(.5,12,8), ico:new THREE.IcosahedronGeometry(.5,1),
+          dome:new THREE.SphereGeometry(.5,12,7,0,Math.PI*2,0,Math.PI/2), torus:new THREE.TorusGeometry(.5,.12,7,14),
+          prism:new THREE.CylinderGeometry(.5,.5,1,3), glowbox:new THREE.BoxGeometry(1,1,1), glowsphere:new THREE.SphereGeometry(.5,9,6)
+        };
+        Object.entries(partBuckets).forEach(([bucket,parts])=>{
+          const byKind=new Map(); parts.forEach((part,index)=>{ if(!byKind.has(part.kind))byKind.set(part.kind,[]); byKind.get(part.kind).push({part,index}); });
+          byKind.forEach((entries,kind)=>{
+            const glow=bucket==='glow' || kind.startsWith('glow');
+            const material=glow
+              ? new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffd59a,emissiveIntensity:0,transparent:true,opacity:.10,depthWrite:false,roughness:DATA.artDirection.glowRoughness})
+              : new THREE.MeshStandardMaterial({color:0xffffff,roughness:DATA.artDirection.matteRoughness,metalness:0});
+            if(glow)nightMaterials.push(material);
+            const mesh=new THREE.InstancedMesh(geometries[kind],material,entries.length);
+            const lookup=new Map();
+            mesh.userData.originalColors=[];
+            entries.forEach(({part,index},instanceIndex)=>{
+              const originalColor=new THREE.Color(part.color);
+              mesh.setMatrixAt(instanceIndex,part.matrix); mesh.setColorAt(instanceIndex,originalColor);
+              mesh.userData.originalColors[instanceIndex]=originalColor.clone();
+              const owner=partOwners[bucket][index];
+              if(owner){
+                lookup.set(instanceIndex,owner);
+                if(!serviceInstances.has(owner))serviceInstances.set(owner,[]);
+                serviceInstances.get(owner).push({mesh,instanceIndex,kind,originalColor:originalColor.clone()});
+              }
+            });
+            mesh.instanceMatrix.needsUpdate=true; if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+            mesh.castShadow=!glow; mesh.receiveShadow=!glow; mesh.userData={partKind:kind,bucket}; scene.add(mesh);
+            mesh.userData.originalColors=entries.map(({part})=>new THREE.Color(part.color));
+            if(lookup.size){instanceLookup.set(mesh,lookup);selectableServiceMeshes.push(mesh);}
+            if(bucket==='near')nearMeshes.push(mesh); stage2DrawCalls++;
+          });
+        });
+      }
+
+      function makeRoundedBoxGeometry() {
+        const geometry=new THREE.BoxGeometry(1,1,1,2,2,2), p=geometry.attributes.position, v=new THREE.Vector3(), core=new THREE.Vector3(), delta=new THREE.Vector3();
+        for(let i=0;i<p.count;i++){
+          v.fromBufferAttribute(p,i); core.set(THREE.MathUtils.clamp(v.x,-.32,.32),THREE.MathUtils.clamp(v.y,-.32,.32),THREE.MathUtils.clamp(v.z,-.32,.32));
+          delta.copy(v).sub(core).normalize().multiplyScalar(.18); v.copy(core).add(delta); p.setXYZ(i,v.x,v.y,v.z);
+        }
+        geometry.computeVertexNormals(); return geometry;
+      }
+
+      function dijkstra(startId, endId) {
+        if (!roadGraph.has(startId) || !roadGraph.has(endId)) return [];
+        const dist = new Map([...roadGraph.keys()].map(id => [id, Infinity]));
+        const prev = new Map(); const unvisited = new Set(roadGraph.keys()); dist.set(startId,0);
+        while(unvisited.size) {
+          let current=null, best=Infinity;
+          for(const id of unvisited) if(dist.get(id)<best){ best=dist.get(id); current=id; }
+          if(current===null || current===endId) break;
+          unvisited.delete(current);
+          const node=roadGraph.get(current);
+          for(const next of node.links) {
+            if(!unvisited.has(next)) continue;
+            const alt=best+node.position.distanceTo(roadGraph.get(next).position);
+            if(alt<dist.get(next)){ dist.set(next,alt); prev.set(next,current); }
+          }
+        }
+        if(startId!==endId && !prev.has(endId)) return [];
+        const path=[]; let cursor=endId;
+        while(cursor){ path.unshift(cursor); if(cursor===startId) break; cursor=prev.get(cursor); }
+        return path;
+      }
+
+      const selection={type:null,id:null,domainId:null,flowId:null,serviceIds:new Set(),visibleFlowIds:new Set(),walkerId:null};
+      const ui={
+        catalog:document.querySelector('#catalog-panel'),catalogContent:document.querySelector('#catalog-content'),search:document.querySelector('#catalog-search'),
+        detail:document.querySelector('#detail-panel'),detailContent:document.querySelector('#detail-content'),listButton:document.querySelector('#list-btn'),
+        period:document.querySelector('#period-name'),pause:document.querySelector('#pause-btn'),bird:document.querySelector('#bird-btn'),help:document.querySelector('#help-dialog'),
+        labels:document.querySelector('#labels-btn'),packets:document.querySelector('#packets-btn'),apiLines:document.querySelector('#api-lines-btn'),logs:document.querySelector('#logs-btn'),
+        legend:document.querySelector('#flow-legend'),logPanel:document.querySelector('#log-panel'),logList:document.querySelector('#log-list'),logFilter:document.querySelector('#log-filter'),liveDot:document.querySelector('#live-dot'),liveState:document.querySelector('#live-state'),
+        hud:document.querySelector('.hud'),hudToggle:document.querySelector('#hud-toggle'),detailBack:document.querySelector('#detail-back'),tutorialStep:document.querySelector('#tutorial-step'),tutorialPrev:document.querySelector('#tutorial-prev'),tutorialSkip:document.querySelector('#tutorial-skip'),tutorialNext:document.querySelector('#tutorial-next')
+      };
+      const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
+      const coral=new THREE.Color(DATA.palette.coral),highYellow=new THREE.Color('#efd36b');
+      const metricLabels={rpm:tr('metricRpm'),p95:tr('metricP95'),availability:tr('metricAvailability')};
+      const sortedCycles=DATA.dayCycle.map(period=>({...period,minute:timeToMinutes(period.start)})).sort((a,b)=>a.minute-b.minute);
+      let activeTab='domains',isPaused=false,birdView=false,cameraFlight=null,currentPeriod=null,highlightSignature='',pointerStart=null,lastCollisionCheck=0,needsRender=true,tutorialIndex=0,helpReturnFocus=null,pageHidden=document.hidden,renderedFrames=0;
+      let labelsOn=DATA.stage4.defaults.labels,packetsOn=DATA.stage4.defaults.packets,apiLinesOn=DATA.stage4.defaults.apiLines,logsOn=DATA.stage4.defaults.logs;
+      let walkerMeshes=null,flowPatternTime=0,lastLogDomUpdate=0,logDirty=true;
+      const logEntries=[];
+      let previewTarget=null;
+
+      function initStage3UI(){
+        createServicePins();
+        DATA.stage3.timePresets.forEach(minutes=>{
+          const button=document.createElement('button');button.type='button';button.className='time-btn';button.textContent=formatTime(minutes);button.dataset.minutes=String(minutes);
+          button.setAttribute('aria-label',`${tr('jumpTo')} ${formatTime(minutes)}`);document.querySelector('#time-presets').appendChild(button);
+        });
+        renderCatalog(); updatePauseButton();
+        document.querySelectorAll('[data-ui]').forEach(element=>{element.addEventListener('pointerdown',event=>event.stopPropagation());element.addEventListener('pointerup',event=>event.stopPropagation());});
+        document.querySelectorAll('[role="tab"]').forEach(button=>button.addEventListener('click',()=>{activeTab=button.dataset.tab;document.querySelectorAll('[role="tab"]').forEach(tab=>tab.setAttribute('aria-selected',String(tab===button)));renderCatalog();}));
+        ui.search.addEventListener('input',renderCatalog);
+        ui.catalogContent.addEventListener('click',handleDataAction);ui.detailContent.addEventListener('click',handleDataAction);
+        document.querySelector('#catalog-close').addEventListener('click',()=>toggleCatalog(false));
+        ui.listButton.addEventListener('click',()=>toggleCatalog(!ui.catalog.classList.contains('is-open')));
+        document.querySelector('#detail-close').addEventListener('click',()=>clearSelection(false));
+        ui.detailBack.addEventListener('click',()=>{ui.detail.classList.remove('is-open');toggleCatalog(true);});
+        document.querySelector('#overview-btn').addEventListener('click',()=>clearSelection(true));
+        document.querySelector('#help-btn').addEventListener('click',event=>openTutorial(event.currentTarget));
+        document.querySelector('#help-close').addEventListener('click',()=>ui.help.close());
+        ui.tutorialPrev.addEventListener('click',()=>{tutorialIndex=Math.max(0,tutorialIndex-1);renderTutorial();});
+        ui.tutorialSkip.addEventListener('click',completeTutorial);ui.tutorialNext.addEventListener('click',()=>{if(tutorialIndex<2){tutorialIndex++;renderTutorial();}else completeTutorial();});
+        ui.help.addEventListener('close',()=>{helpReturnFocus?.focus();helpReturnFocus=null;});
+        ui.help.addEventListener('keydown',event=>{if(event.key!=='Tab')return;const focusable=[...ui.help.querySelectorAll('button:not([hidden]):not(:disabled),[tabindex="0"]')];if(!focusable.length)return;const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
+        document.querySelector('#time-presets').addEventListener('click',event=>{const button=event.target.closest('[data-minutes]');if(button){simulatedMinutes=Number(button.dataset.minutes);updateDaylight(simulatedMinutes);}});
+        ui.pause.addEventListener('click',()=>{if(reducedMotion)return;isPaused=!isPaused;updatePauseButton();updateLiveState();needsRender=true;});
+        ui.bird.addEventListener('click',()=>setBirdView(!birdView));
+        ui.labels.addEventListener('click',()=>setStage4Toggle('labels',!labelsOn));
+        ui.packets.addEventListener('click',()=>setStage4Toggle('packets',!packetsOn));
+        ui.apiLines.addEventListener('click',()=>setStage4Toggle('apiLines',!apiLinesOn));
+        ui.logs.addEventListener('click',()=>setStage4Toggle('logs',!logsOn));
+        ui.hudToggle.addEventListener('click',()=>toggleMobileHud(!ui.hud.classList.contains('is-open')));
+        document.querySelector('#log-close').addEventListener('click',()=>setStage4Toggle('logs',false));
+        ui.logFilter.addEventListener('change',()=>{logDirty=true;renderLogs(performance.now(),true);});
+        renderer.domElement.addEventListener('pointerdown',onScenePointerDown);renderer.domElement.addEventListener('pointerup',onScenePointerUp);renderer.domElement.addEventListener('pointercancel',()=>pointerStart=null);
+        controls.addEventListener('change',()=>{needsRender=true;});
+        window.addEventListener('keydown',onKeyDown);
+        document.querySelectorAll('.sheet-handle').forEach(setupSheetHandle);
+        window.addEventListener('resize',syncResponsivePanels);
+        document.addEventListener('visibilitychange',()=>{pageHidden=document.hidden;lastTime=performance.now();if(!pageHidden){needsRender=true;logDirty=true;}});
+      }
+
+      function isMobileLayout(){return innerWidth<=DATA.stage5.mobileBreakpoint;}
+      function closeMobileOverlays(except){if(!isMobileLayout())return;if(except!=='catalog')ui.catalog.classList.remove('is-open');if(except!=='detail')ui.detail.classList.remove('is-open');if(except!=='hud')toggleMobileHud(false);if(except!=='logs'&&logsOn)setStage4Toggle('logs',false);}
+      function toggleMobileHud(open){ui.hud.classList.toggle('is-open',open);ui.hudToggle.setAttribute('aria-expanded',String(open));if(open)closeMobileOverlays('hud');lastCollisionCheck=0;needsRender=true;}
+      function syncResponsivePanels(){lastCollisionCheck=0;needsRender=true;if(!isMobileLayout()){ui.hud.classList.remove('is-open');ui.hudToggle.setAttribute('aria-expanded','false');document.querySelectorAll('.sheet-handle').forEach(handle=>handle.setAttribute('aria-expanded','false'));[ui.catalog,ui.detail].forEach(panel=>{panel.style.removeProperty('--sheet-height');panel.classList.remove('is-expanded');});}else if(ui.detail.classList.contains('is-open'))ui.catalog.classList.remove('is-open');}
+      function setupSheetHandle(handle){
+        const panel=handle.closest('aside'),defaultHeight=Number(handle.dataset.sheet==='catalog'?DATA.stage5.catalogHeight:DATA.stage5.detailHeight);let drag=null;
+        const setExpanded=expanded=>{panel.style.setProperty('--sheet-height',`${expanded?100:defaultHeight}dvh`);panel.classList.toggle('is-expanded',expanded);handle.setAttribute('aria-expanded',String(expanded));handle.setAttribute('aria-label',`${expanded?tr('collapse'):tr('expand')} ${handle.dataset.sheet==='catalog'?tr('directory'):tr('detail')}`);};
+        const finish=event=>{if(!drag)return;const moved=Math.abs(event.clientY-drag.startY);let expanded=drag.height>defaultHeight+(100-defaultHeight)/2;if(moved<=6)expanded=!drag.wasExpanded;setExpanded(expanded);try{handle.releasePointerCapture(event.pointerId);}catch{}drag=null;lastCollisionCheck=0;needsRender=true;};
+        const cancel=event=>{if(!drag)return;setExpanded(drag.wasExpanded);try{handle.releasePointerCapture(event.pointerId);}catch{}drag=null;needsRender=true;};
+        handle.addEventListener('pointerdown',event=>{if(!isMobileLayout())return;drag={startY:event.clientY,startHeight:panel.getBoundingClientRect().height,height:defaultHeight,wasExpanded:handle.getAttribute('aria-expanded')==='true'};handle.setPointerCapture(event.pointerId);event.preventDefault();});
+        handle.addEventListener('pointermove',event=>{if(!drag)return;const px=THREE.MathUtils.clamp(drag.startHeight+drag.startY-event.clientY,innerHeight*.25,innerHeight);drag.height=px/innerHeight*100;panel.style.setProperty('--sheet-height',`${drag.height}dvh`);needsRender=true;});
+        handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',cancel);
+        handle.addEventListener('click',event=>{if(!isMobileLayout()||event.detail!==0)return;setExpanded(handle.getAttribute('aria-expanded')!=='true');needsRender=true;});
+      }
+      function readTutorialSeen(){try{return localStorage.getItem(DATA.stage5.tutorialStorage)==='1';}catch{return false;}}
+      function rememberTutorial(){try{localStorage.setItem(DATA.stage5.tutorialStorage,'1');}catch(error){console.info('Tutorial preference could not be saved.',error);}}
+      function openTutorial(trigger){helpReturnFocus=trigger||document.activeElement;tutorialIndex=0;renderTutorial();if(!ui.help.open)ui.help.showModal();queueMicrotask(()=>ui.tutorialNext.focus());}
+      function completeTutorial(){rememberTutorial();ui.help.close();}
+      function renderTutorial(){const steps=[['tutorial1Title',isMobileLayout()?'tutorial1Touch':'tutorial1'],['tutorial2Title','tutorial2'],['tutorial3Title','tutorial3']],step=steps[tutorialIndex];ui.tutorialStep.innerHTML=`<strong>${tr(step[0])}</strong><p>${tr(step[1])}</p>`;document.querySelectorAll('#tutorial-progress i').forEach((dot,index)=>dot.classList.toggle('is-active',index<=tutorialIndex));ui.tutorialPrev.hidden=tutorialIndex===0;ui.tutorialNext.textContent=tutorialIndex===2?tr('startExplore'):tr('next');ui.tutorialNext.setAttribute('aria-label',ui.tutorialNext.textContent);}
+
+      function handleDataAction(event){
+        const target=event.target.closest('[data-service],[data-domain],[data-flow]');if(!target)return;
+        if(target.dataset.service)selectItem(target.dataset.service);else if(target.dataset.domain)selectIsland(target.dataset.domain);else if(target.dataset.flow)selectFlow(target.dataset.flow);
+      }
+      function toggleCatalog(open){if(open&&logsOn&&innerWidth<=1100)setStage4Toggle('logs',false);ui.catalog.classList.toggle('is-open',open);ui.listButton.setAttribute('aria-pressed',String(open));ui.listButton.setAttribute('aria-expanded',String(open));if(open&&isMobileLayout())ui.detail.classList.remove('is-open');lastCollisionCheck=0;needsRender=true;}
+      function renderCatalog(){
+        const query=ui.search.value.trim().toLocaleLowerCase(UI_LANG==='en'?'en':'zh-Hant');let html='';
+        if(activeTab==='domains'){
+          DATA.domains.forEach(domain=>{
+            const domainMatch=`${localize(domain)} ${domain.id}`.toLocaleLowerCase(UI_LANG==='en'?'en':'zh-Hant').includes(query);
+            const services=domain.services.filter(service=>domainMatch||`${localize(service)} ${localize(service,'description')} ${service.id}`.toLocaleLowerCase(UI_LANG==='en'?'en':'zh-Hant').includes(query));
+            if(query&&!domainMatch&&!services.length)return;
+            html+=`<details class="domain-group" ${query||selection.domainId===domain.id?'open':''} style="--domain-color:${domain.color}"><summary><span class="domain-dot"></span><strong>${escapeHTML(localize(domain))}</strong><small>${domain.services.length}</small></summary><button class="domain-select" type="button" data-domain="${domain.id}" aria-label="${tr('selectDomain')} ${escapeHTML(localize(domain))}">${tr('islandSummary')} · ${domain.services.length} ${tr('serviceUnit')}</button>`;
+            services.forEach((service,index)=>{html+=`<button class="service-row" type="button" data-service="${service.id}" aria-label="${tr('selectService')} ${escapeHTML(localize(service))}"><span class="node-no">${String(index+1).padStart(2,'0')}</span><span><strong>${escapeHTML(localize(service))}</strong><small>${escapeHTML(localize(service,'description'))}</small></span><span class="status-wrap"><i class="status-dot ${service.status}"></i>${tr(service.status)}</span></button>`;});
+            html+='</details>';
+          });
+        }else{
+          DATA.flows.filter(flow=>{const from=serviceById.get(flow.from),to=serviceById.get(flow.to);return !query||`${localize(flow)} ${localize(from||{},'name')} ${localize(to||{},'name')} ${localize(flow,'level')} ${localize(flow,'payload')}`.toLocaleLowerCase(UI_LANG==='en'?'en':'zh-Hant').includes(query);}).forEach(flow=>{const from=serviceById.get(flow.from),to=serviceById.get(flow.to);html+=`<button class="flow-row" type="button" data-flow="${flow.id}" aria-label="${tr('selectFlow')} ${escapeHTML(localize(flow))}"><span><strong>${escapeHTML(localize(flow))}</strong><small class="flow-route">${escapeHTML(from?localize(from):flow.from)} → ${escapeHTML(to?localize(to):flow.to)}</small></span><span class="chip">${escapeHTML(localize(flow,'level'))}</span></button>`;});
+        }
+        ui.catalogContent.innerHTML=html||`<div class="empty-state">${tr('noResults')}</div>`;
+      }
+
+      function selectIsland(domainId){
+        const domain=DATA.domains.find(item=>item.id===domainId);if(!domain)return;
+        setSelection('island',domain.id,domain.id,null,new Set(domain.services.map(service=>service.id)),new Set(DATA.flows.filter(flow=>domainByService.get(flow.from)?.id===domain.id||domainByService.get(flow.to)?.id===domain.id).map(flow=>flow.id)));
+        showIslandCard(domain);showPins([domain.id]);focusIsland(domain);renderCatalog();updateFlowVisibility();
+      }
+      function selectItem(serviceId){
+        const service=serviceById.get(serviceId),domain=domainByService.get(serviceId);if(!service||!domain)return;
+        const flows=DATA.flows.filter(flow=>flow.from===serviceId||flow.to===serviceId);
+        setSelection('service',serviceId,domain.id,null,new Set([serviceId]),new Set(flows.map(flow=>flow.id)));
+        showServiceCard(service,domain);showPins([domain.id]);focusService(serviceId);renderCatalog();updateFlowVisibility();
+      }
+      function selectFlow(flowId){
+        const flow=DATA.flows.find(item=>item.id===flowId);if(!flow)return;
+        const domains=[domainByService.get(flow.from)?.id,domainByService.get(flow.to)?.id].filter(Boolean);
+        setSelection('flow',flow.id,null,flow.id,new Set([flow.from,flow.to]),new Set([flow.id]));
+        showFlowCard(flow);showPins(domains);focusFlow(flow);renderCatalog();updateFlowVisibility();
+      }
+      function selectWalker(walkerId){const walker=walkerById.get(walkerId);if(!walker)return false;const flow=walker.flow,domains=[domainByService.get(flow.from)?.id,domainByService.get(flow.to)?.id].filter(Boolean);setSelection('walker',walker.id,null,flow.id,new Set([flow.from,flow.to]),new Set([flow.id]));selection.walkerId=walker.id;showFlowCard(flow,walker);showPins(domains);focusWalker(walker);renderCatalog();updateFlowVisibility();return true;}
+      function setSelection(type,id,domainId,flowId,serviceIds,visibleFlowIds){selection.type=type;selection.id=id;selection.domainId=domainId;selection.flowId=flowId;selection.walkerId=null;selection.serviceIds=serviceIds;selection.visibleFlowIds=visibleFlowIds;updateHighlights();updateIslandLabels();needsRender=true;}
+      function clearSelection(returnOverview=false){selection.type=selection.id=selection.domainId=selection.flowId=selection.walkerId=null;selection.serviceIds=new Set();selection.visibleFlowIds=new Set();ui.detail.classList.remove('is-open');updateHighlights();updateIslandLabels();showPins([]);renderCatalog();updateFlowVisibility();needsRender=true;if(returnOverview)focusOverview();}
+
+      function updateHighlights(){
+        const high=new Set(currentPeriod?.highLoad||[]),selected=selection.serviceIds;
+        const signature=`${[...high].sort()}|${[...selected].sort()}`;if(signature===highlightSignature)return;highlightSignature=signature;
+        const touched=new Set();
+        serviceInstances.forEach((refs,serviceId)=>refs.forEach(ref=>{const color=ref.originalColor.clone();if(high.has(serviceId))color.lerp(highYellow,DATA.stage3.highLoadMix);if(selected.has(serviceId))color.lerp(coral,DATA.stage3.selectionMix);ref.mesh.setColorAt(ref.instanceIndex,color);touched.add(ref.mesh);}));
+        touched.forEach(mesh=>{if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;});
+      }
+      function updateIslandLabels(){const selectedDomains=new Set();if(selection.domainId)selectedDomains.add(selection.domainId);if(selection.flowId){const flow=DATA.flows.find(item=>item.id===selection.flowId);if(flow){selectedDomains.add(domainByService.get(flow.from)?.id);selectedDomains.add(domainByService.get(flow.to)?.id);}}islandLabels.forEach(({element},domainId)=>{const selected=selectedDomains.has(domainId);element.classList.toggle('is-selected',selected);element.classList.toggle('is-muted',Boolean(selection.type)&&!selected);});}
+      function showPins(domainIds){
+        const visible=new Set(domainIds);servicePins.forEach((pin,serviceId)=>{const show=visible.has(domainByService.get(serviceId)?.id);pin.object.visible=show;servicePinLines.get(serviceId).visible=show;pin.element.classList.remove('is-collision-hidden','is-compact');});lastCollisionCheck=0;
+      }
+      function createServicePins(){
+        DATA.domains.forEach(domain=>domain.services.forEach((service,index)=>{const position=servicePositions.get(service.id);if(!position)return;const element=document.createElement('div');element.className='service-pin';element.innerHTML=`<b>${String(index+1).padStart(2,'0')}</b><span>${escapeHTML(localize(service))}</span>`;element.dataset.full=localize(service);
+          const object=new CSS2DObject(element);object.position.copy(position).add(new THREE.Vector3(0,3.35,0));object.visible=false;scene.add(object);servicePins.set(service.id,{element,object});
+          const geometry=new THREE.BufferGeometry().setFromPoints([position.clone().add(new THREE.Vector3(0,.7,0)),position.clone().add(new THREE.Vector3(0,3.18,0))]);const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:DATA.palette.coral,transparent:true,opacity:.72,depthTest:false}));line.renderOrder=30;line.visible=false;scene.add(line);servicePinLines.set(service.id,line);
+        }));
+      }
+
+      function showIslandCard(domain){
+        const flows=DATA.flows.filter(flow=>domainByService.get(flow.from)?.id===domain.id||domainByService.get(flow.to)?.id===domain.id);
+        ui.detailContent.innerHTML=`<span class="eyebrow">${tr('islandSummary')}</span><div class="detail-icon">⬡</div><h2>${escapeHTML(localize(domain))}</h2><p>${domain.services.length} ${tr('serviceUnit')} · axial (${domain.axial.join(', ')})</p><h3>${tr('nodes')}</h3><div class="node-list">${domain.services.map((service,index)=>`<button type="button" data-service="${service.id}"><span class="chip">${String(index+1).padStart(2,'0')}</span>${escapeHTML(localize(service))}</button>`).join('')}</div><h3>${tr('connections')}</h3><div class="chips">${flows.map(flow=>`<button type="button" class="chip" data-flow="${flow.id}">${escapeHTML(localize(flow))}</button>`).join('')}</div>`;openDetail();
+      }
+      function showServiceCard(service,domain){
+        const metrics=Object.entries(service.metrics).slice(0,3),flows=DATA.flows.filter(flow=>flow.from===service.id||flow.to===service.id);
+        ui.detailContent.innerHTML=`<span class="eyebrow">${escapeHTML(localize(domain))}</span><div class="thumbnail-wrap"><canvas id="service-thumbnail" width="160" height="160" aria-label="${escapeHTML(localize(service))} ${tr('thumbnail')}"></canvas></div><h2>${escapeHTML(localize(service))}</h2><div class="chips"><span class="chip">${tr(service.status)}</span>${currentPeriod?.highLoad?.includes(service.id)?`<span class="chip">${tr('highLoad')}</span>`:''}</div><p>${escapeHTML(localize(service,'description'))}</p><h3>${tr('metrics')}</h3><div class="metric-grid">${metrics.map(([key,value])=>`<div class="metric"><strong>${escapeHTML(String(value))}</strong><small>${escapeHTML(metricLabels[key]||key)}</small></div>`).join('')}</div><h3>${tr('connections')}</h3><div class="chips">${flows.length?flows.map(flow=>`<button type="button" class="chip" data-flow="${flow.id}">${escapeHTML(localize(flow))}</button>`).join(''):`<span class="chip">—</span>`}</div>`;openDetail();renderServiceThumbnail(service.id,document.querySelector('#service-thumbnail'));
+      }
+      function showFlowCard(flow,walker=null){const from=serviceById.get(flow.from),to=serviceById.get(flow.to),direction=walker?(walker.state==='handoff'?tr('handoff'):walker.direction>0?tr('outbound'):tr('returning')):null;ui.detailContent.innerHTML=`<span class="eyebrow">${walker?tr('walker'):tr('connections')}</span><h2>${escapeHTML(localize(flow))}</h2><div class="flow-hero"><span>${escapeHTML(from?localize(from):flow.from)}</span><strong>→ ${escapeHTML(to?localize(to):flow.to)}</strong><span class="chip">${tr(flow.mode)}</span></div><div class="metric-grid"><div class="metric"><strong>${escapeHTML(flow.protocol)}</strong><small>${tr('protocol')}</small></div><div class="metric"><strong>${escapeHTML(String(flow.rpm))}</strong><small>RPM</small></div><div class="metric"><strong>${escapeHTML(localize(flow,'level'))}</strong><small>${tr('level')}</small></div></div><p><b>${tr('payload')}：</b>${escapeHTML(localize(flow,'payload'))}</p><p><b>${tr('actor')}：</b>${escapeHTML(localize(flow,'actor'))}</p>${walker?`<p><b>${tr('direction')}：</b>${direction}</p>`:''}<div class="chips"><button type="button" class="chip" data-service="${flow.from}">${tr('from')} · ${escapeHTML(from?localize(from):flow.from)}</button><button type="button" class="chip" data-service="${flow.to}">${tr('to')} · ${escapeHTML(to?localize(to):flow.to)}</button></div>`;openDetail();}
+      function openDetail(){if(isMobileLayout())closeMobileOverlays('detail');ui.detail.classList.add('is-open');if(isMobileLayout())toggleCatalog(false);lastCollisionCheck=0;needsRender=true;}
+
+      function renderServiceThumbnail(serviceId,canvas){
+        const refs=serviceInstances.get(serviceId);if(!refs||!canvas)return;const size=160,previewScene=new THREE.Scene();previewScene.background=new THREE.Color('#cbd9d0');const previewCamera=new THREE.PerspectiveCamera(34,1,.1,30);previewCamera.position.set(4.1,3.3,5.2);previewCamera.lookAt(0,1,0);previewScene.add(new THREE.HemisphereLight(0xffffff,0x50635c,1.4));const key=new THREE.DirectionalLight(0xfff0d5,2.2);key.position.set(4,7,5);previewScene.add(key);
+        const origin=servicePositions.get(serviceId),matrix=new THREE.Matrix4(),position=new THREE.Vector3(),quaternion=new THREE.Quaternion(),scale=new THREE.Vector3();refs.forEach(ref=>{ref.mesh.getMatrixAt(ref.instanceIndex,matrix);matrix.decompose(position,quaternion,scale);position.sub(origin);const material=new THREE.MeshStandardMaterial({color:ref.originalColor,roughness:.8,emissive:ref.kind.startsWith('glow')?ref.originalColor:0x000000,emissiveIntensity:ref.kind.startsWith('glow')?.8:0,transparent:ref.kind.startsWith('glow'),opacity:ref.kind.startsWith('glow')?.85:1});const mesh=new THREE.Mesh(ref.mesh.geometry,material);mesh.position.copy(position);mesh.quaternion.copy(quaternion);mesh.scale.copy(scale);previewScene.add(mesh);});
+        previewTarget??=new THREE.WebGLRenderTarget(size,size,{depthBuffer:true});const oldTarget=renderer.getRenderTarget(),oldViewport=renderer.getViewport(new THREE.Vector4()),oldScissor=renderer.getScissor(new THREE.Vector4()),oldScissorTest=renderer.getScissorTest(),oldClear=renderer.getClearColor(new THREE.Color()).clone(),oldAlpha=renderer.getClearAlpha(),oldAutoClear=renderer.autoClear;
+        renderer.setRenderTarget(previewTarget);renderer.setViewport(0,0,size,size);renderer.setScissorTest(false);renderer.setClearColor('#cbd9d0',1);renderer.autoClear=true;renderer.clear();renderer.render(previewScene,previewCamera);const pixels=new Uint8Array(size*size*4);renderer.readRenderTargetPixels(previewTarget,0,0,size,size,pixels);renderer.setRenderTarget(oldTarget);renderer.setViewport(oldViewport);renderer.setScissor(oldScissor);renderer.setScissorTest(oldScissorTest);renderer.setClearColor(oldClear,oldAlpha);renderer.autoClear=oldAutoClear;
+        const context=canvas.getContext('2d'),image=context.createImageData(size,size);for(let y=0;y<size;y++)image.data.set(pixels.subarray((size-1-y)*size*4,(size-y)*size*4),y*size*4);context.putImageData(image,0,0);previewScene.traverse(object=>{if(object.isMesh)object.material.dispose();});
+      }
+
+      function focusIsland(domain){const target=islandById.get(domain.id).center.clone();target.y=.6;flyCamera(target,new THREE.Vector3(...DATA.stage3.camera.islandOffset));}
+      function focusService(serviceId){const target=servicePositions.get(serviceId).clone();target.y=1;flyCamera(target,new THREE.Vector3(...DATA.stage3.camera.serviceOffset));}
+      function focusFlow(flow){const a=servicePositions.get(flow.from),b=servicePositions.get(flow.to);if(!a||!b)return;const target=a.clone().add(b).multiplyScalar(.5),span=a.distanceTo(b);flyCamera(target,new THREE.Vector3(Math.max(3,span*.18),Math.max(5,span*.36),Math.max(7,span*.72)));}
+      function focusWalker(walker){const target=walker.position.clone();flyCamera(target,new THREE.Vector3(1.5,2.2,3));}
+      function flyCamera(rawTarget,offset){leaveBirdView();const target=rawTarget.clone();if(ui.detail.classList.contains('is-open')&&!isMobileLayout())target.x+=DATA.stage3.camera.panelTargetShift;const destination=rawTarget.clone().add(offset);startFlight(destination,target);}
+      function startFlight(position,target){cameraFlight=null;if(reducedMotion){camera.position.copy(position);controls.target.copy(target);controls.update();return;}cameraFlight={start:performance.now(),duration:DATA.stage3.camera.duration,fromPosition:camera.position.clone(),toPosition:position.clone(),fromTarget:controls.target.clone(),toTarget:target.clone()};}
+      function updateCameraFlight(now){if(!cameraFlight)return;const t=Math.min(1,(now-cameraFlight.start)/cameraFlight.duration),e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;camera.position.lerpVectors(cameraFlight.fromPosition,cameraFlight.toPosition,e);controls.target.lerpVectors(cameraFlight.fromTarget,cameraFlight.toTarget,e);if(t>=1)cameraFlight=null;}
+      function cancelCameraFlight(){cameraFlight=null;}
+      function focusOverview(){leaveBirdView();const target=new THREE.Vector3(...DATA.stage3.overview.target),distance=camera.aspect<.9?DATA.stage3.overview.narrowDistance:DATA.stage3.overview.wideDistance;startFlight(target.clone().addScaledVector(overviewDirection,distance),target);}
+      function setBirdView(enabled){birdView=enabled;ui.bird.setAttribute('aria-pressed',String(enabled));cancelCameraFlight();if(enabled){controls.maxPolarAngle=Math.PI;const target=controls.target.clone(),position=target.clone().add(new THREE.Vector3(...DATA.stage3.camera.birdOffset));startFlight(position,target);}else{controls.maxPolarAngle=defaultMaxPolarAngle;focusOverview();}}
+      function leaveBirdView(){if(!birdView)return;birdView=false;ui.bird.setAttribute('aria-pressed','false');controls.maxPolarAngle=defaultMaxPolarAngle;}
+
+      function onScenePointerDown(event){if(event.button!==0)return;cancelCameraFlight();pointerStart={id:event.pointerId,x:event.clientX,y:event.clientY};}
+      function screenPoint(position,rect){const projected=position.clone().project(camera);if(projected.z<-1||projected.z>1)return null;return{x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(-projected.y+1)*rect.height/2};}
+      function screenSegmentDistance(x,y,a,b){const dx=b.x-a.x,dy=b.y-a.y,length=dx*dx+dy*dy;if(!length)return Math.hypot(x-a.x,y-a.y);const t=THREE.MathUtils.clamp(((x-a.x)*dx+(y-a.y)*dy)/length,0,1);return Math.hypot(x-a.x-dx*t,y-a.y-dy*t);}
+      function nearbyWalker(x,y,rect){if(!packetsOn)return null;let nearest=null,best=11;walkers.forEach(walker=>{const point=screenPoint(tempWalkerPoint.copy(walker.position).add(new THREE.Vector3(0,.18,0)),rect);if(!point)return;const distance=Math.hypot(x-point.x,y-point.y);if(distance<best){best=distance;nearest=walker;}});return nearest;}
+      function nearbyFlow(x,y,rect){let nearest=null,best=7;flowMeshes.forEach((mesh,flowId)=>{if(!mesh.visible)return;const route=flowRoutes.get(flowId);for(let i=1;i<route.points.length;i++){const a=screenPoint(route.points[i-1],rect),b=screenPoint(route.points[i],rect);if(!a||!b)continue;const distance=screenSegmentDistance(x,y,a,b);if(distance<best){best=distance;nearest=flowId;}}});return nearest;}
+      function onScenePointerUp(event){if(!pointerStart||pointerStart.id!==event.pointerId)return;const distance=Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y);pointerStart=null;if(distance>DATA.stage3.pointerTolerance)return;const rect=renderer.domElement.getBoundingClientRect(),walker=nearbyWalker(event.clientX,event.clientY,rect);if(walker){selectWalker(walker.id);return;}const flowId=nearbyFlow(event.clientX,event.clientY,rect);if(flowId){selectFlow(flowId);return;}pointer.set(((event.clientX-rect.left)/rect.width)*2-1,-((event.clientY-rect.top)/rect.height)*2+1);raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects([...walkerPickMeshes.filter(mesh=>mesh.visible),...flowPickMeshes.filter(mesh=>mesh.visible),...selectableServiceMeshes,...islandPickMeshes],false);for(const hit of hits){if(hit.object.isInstancedMesh&&Number.isInteger(hit.instanceId)){const walkerId=walkerInstanceLookup.get(hit.object)?.get(hit.instanceId);if(walkerId&&selectWalker(walkerId))return;const serviceId=instanceLookup.get(hit.object)?.get(hit.instanceId);if(serviceId){selectItem(serviceId);return;}}if(hit.object.userData.flowId){selectFlow(hit.object.userData.flowId);return;}if(hit.object.userData.domainId){selectIsland(hit.object.userData.domainId);return;}}}
+      function onKeyDown(event){const target=event.target;if(target?.closest?.('input,textarea,select,button,[role="tab"],[contenteditable="true"]'))return;if(event.key==='Escape'){if(ui.help.open)ui.help.close();else if(logsOn)setStage4Toggle('logs',false);else if(isMobileLayout()&&ui.hud.classList.contains('is-open'))toggleMobileHud(false);else if(ui.detail.classList.contains('is-open'))ui.detail.classList.remove('is-open');else if(isMobileLayout()&&ui.catalog.classList.contains('is-open'))toggleCatalog(false);else clearSelection(false);return;}if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();cancelCameraFlight();const offset=camera.position.clone().sub(controls.target),spherical=new THREE.Spherical().setFromVector3(offset);if(event.key==='ArrowLeft')spherical.theta-=.09;if(event.key==='ArrowRight')spherical.theta+=.09;if(event.key==='ArrowUp')spherical.phi=Math.max(.12,spherical.phi-.07);if(event.key==='ArrowDown')spherical.phi=Math.min(controls.maxPolarAngle,spherical.phi+.07);camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(spherical));controls.update();needsRender=true;}
+
+      function updatePeriodAndLoad(minutes){let period=sortedCycles[sortedCycles.length-1];for(const candidate of sortedCycles)if(minutes>=candidate.minute)period=candidate;if(currentPeriod?.id===period.id)return;currentPeriod=period;ui.period.textContent=localize(period,'label');updateHighlights();if(selection.type==='service')showServiceCard(serviceById.get(selection.id),domainByService.get(selection.id));}
+      function updatePauseButton(){const stopped=isPaused||reducedMotion,canResume=isPaused&&!reducedMotion;ui.pause.setAttribute('aria-pressed',String(stopped));ui.pause.disabled=reducedMotion;ui.pause.querySelector('span').textContent=canResume?'▶':'Ⅱ';ui.pause.querySelector('b').textContent=canResume?tr('resume'):tr('pause');}
+      function timeToMinutes(value){const [h,m]=value.split(':').map(Number);return h*60+m;}
+      function formatTime(minutes){return `${String(Math.floor(minutes/60)%24).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
+      function escapeHTML(value){return String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
+
+      class PolylineCurve extends THREE.Curve {
+        constructor(points){super();this.points=points.map(point=>point.clone());this.cumulative=[0];for(let i=1;i<this.points.length;i++)this.cumulative.push(this.cumulative[i-1]+this.points[i-1].distanceTo(this.points[i]));this.length=this.cumulative.at(-1);}
+        getPoint(t,target=new THREE.Vector3()){const distance=THREE.MathUtils.clamp(t,0,1)*this.length;let index=1;while(index<this.cumulative.length-1&&this.cumulative[index]<distance)index++;const a=this.points[index-1],b=this.points[index],span=Math.max(.0001,this.cumulative[index]-this.cumulative[index-1]);return target.lerpVectors(a,b,(distance-this.cumulative[index-1])/span);}
+      }
+      function segmentDistanceXZ(a,b,p){const dx=b.x-a.x,dz=b.z-a.z,length=dx*dx+dz*dz;if(!length)return Math.hypot(p.x-a.x,p.z-a.z);const t=THREE.MathUtils.clamp(((p.x-a.x)*dx+(p.z-a.z)*dz)/length,0,1);return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}
+      function chooseAccessNode(serviceId){const service=servicePositions.get(serviceId),domain=domainByService.get(serviceId);if(!service||!domain)return null;const blockers=domain.services.filter(item=>item.id!==serviceId).map(item=>servicePositions.get(item.id));const candidates=[...roadGraph.values()].filter(node=>node.id.startsWith(`${domain.id}:ring:`)).map(node=>({node,blocked:blockers.some(point=>segmentDistanceXZ(service,node.position,point)<.78),distance:service.distanceTo(node.position)})).sort((a,b)=>(a.blocked-b.blocked)||a.distance-b.distance);return candidates[0]?.node||null;}
+      function buildFlowRoute(flow){const from=servicePositions.get(flow.from),to=servicePositions.get(flow.to);if(!from||!to)return{error:`${tr('routeError')}：${flow.id} (${!from?flow.from:flow.to})`};const start=chooseAccessNode(flow.from),end=chooseAccessNode(flow.to);if(!start||!end)return{error:`${tr('routeError')}：${flow.id} (access)`};const nodeIds=dijkstra(start.id,end.id);if(!nodeIds.length)return{error:`${tr('routeError')}：${flow.id} (${start.id} → ${end.id})`};const y=DATA.stage4.routeHeight,points=[from.clone().setY(y),...nodeIds.map(id=>roadGraph.get(id).position.clone().setY(y)),to.clone().setY(y)];const compact=points.filter((point,index)=>!index||point.distanceTo(points[index-1])>.02);const curve=new PolylineCurve(compact);return{flow,points:compact,curve,length:curve.length,nodeIds};}
+      function pointOnRoute(route,distance,target=new THREE.Vector3()){return route.curve.getPoint(route.length?distance/route.length:0,target);}
+      function directionOnRoute(route,distance,direction,target=new THREE.Vector3()){const step=.04*direction,a=THREE.MathUtils.clamp(distance,0,route.length),b=THREE.MathUtils.clamp(distance+step,0,route.length);pointOnRoute(route,b,target);return target.sub(pointOnRoute(route,a,tempRoutePoint)).normalize();}
+      const tempRoutePoint=new THREE.Vector3(),tempWalkerPoint=new THREE.Vector3(),tempWalkerDirection=new THREE.Vector3(),tempWalkerQuaternion=new THREE.Quaternion(),tempWalkerMatrix=new THREE.Matrix4(),tempWalkerScale=new THREE.Vector3(1,1,1),tempWalkerOffset=new THREE.Vector3(),tempWalkerEuler=new THREE.Euler(),tempYAxis=new THREE.Vector3(0,1,0);
+
+      function createFlowLines(){
+        const vertexShader=`varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
+        const fragmentShader=`uniform float uTime;uniform float uLength;uniform float uThreshold;uniform vec3 uColor;varying vec2 vUv;void main(){float stripe=vUv.x*uLength*5.0-uTime*1.4;if(fract(stripe)>uThreshold)discard;gl_FragColor=vec4(uColor,.82);}`;
+        DATA.flows.forEach(flow=>{const route=buildFlowRoute(flow);if(route.error){flow.routeError=route.error;console.error(route.error);return;}flowRoutes.set(flow.id,route);const segments=Math.max(16,(route.points.length-1)*7),baseThreshold=flow.mode==='sync'?1:flow.mode==='async'?.6:.3,geometry=new THREE.TubeGeometry(route.curve,segments,DATA.stage4.tubeRadius,5,false),material=new THREE.ShaderMaterial({uniforms:{uTime:{value:0},uLength:{value:route.length},uThreshold:{value:reducedMotion?.52:baseThreshold},uColor:{value:new THREE.Color(DATA.palette.coral)}},vertexShader,fragmentShader,transparent:true,depthWrite:false});const mesh=new THREE.Mesh(geometry,material);mesh.userData={flowId:flow.id,baseThreshold};mesh.visible=false;mesh.renderOrder=4;scene.add(mesh);flowMeshes.set(flow.id,mesh);flowPickMeshes.push(mesh);});
+      }
+      function drawBadgeIcon(context,type){context.clearRect(0,0,128,128);context.fillStyle='#fff';context.beginPath();context.arc(64,64,54,0,Math.PI*2);context.fill();context.strokeStyle=DATA.palette.coral;context.lineWidth=8;context.stroke();context.strokeStyle='#102b32';context.fillStyle='#102b32';context.lineWidth=7;context.lineCap='round';context.lineJoin='round';if(type==='key'){context.beginPath();context.arc(49,58,13,0,Math.PI*2);context.stroke();context.beginPath();context.moveTo(59,68);context.lineTo(84,91);context.moveTo(73,80);context.lineTo(81,72);context.stroke();}else if(type==='lock'){context.strokeRect(39,57,50,39);context.beginPath();context.arc(64,57,18,Math.PI,0);context.stroke();context.beginPath();context.arc(64,75,4,0,Math.PI*2);context.fill();}else{context.strokeRect(39,31,50,67);context.beginPath();context.moveTo(49,51);context.lineTo(78,51);context.moveTo(49,65);context.lineTo(78,65);context.moveTo(49,79);context.lineTo(69,79);context.stroke();}}
+      function getBadgeResource(type){const icon=type==='token'?'key':type==='jwe'||type==='jws'?'lock':'document';if(badgeResources.has(icon))return badgeResources.get(icon);const canvas=document.createElement('canvas');canvas.width=canvas.height=DATA.stage4.badgeSize;drawBadgeIcon(canvas.getContext('2d'),icon);const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false});const resource={texture,material};badgeResources.set(icon,resource);return resource;}
+      function makeWalkerMesh(geometry,material,count,lookupIds){const mesh=new THREE.InstancedMesh(geometry,material,count);mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.frustumCulled=false;mesh.castShadow=false;mesh.receiveShadow=false;const lookup=new Map();lookupIds.forEach((id,index)=>lookup.set(index,id));walkerInstanceLookup.set(mesh,lookup);walkerPickMeshes.push(mesh);scene.add(mesh);return mesh;}
+      function createWalkers(){
+        const stageRng=mulberry32(DATA.stage4.seed),validFlows=DATA.flows.filter(flow=>flowRoutes.has(flow.id));let index=0;validFlows.forEach((flow,flowIndex)=>{const route=flowRoutes.get(flow.id);for(let i=0;i<flow.walkers;i++){const id=`${flow.id}-packet-${String(i+1).padStart(2,'0')}`,direction=i%2?1:-1,distance=route.length*((i+.5)/flow.walkers);const walker={id,flow,route,index:index++,phase:stageRng(),state:direction>0?'forward':'returning',direction,distance,wait:0,position:new THREE.Vector3(),heading:new THREE.Vector3(0,0,1),accessory:flow.accessory};walkers.push(walker);walkerById.set(id,walker);const sprite=new THREE.Sprite(getBadgeResource(flow.badge).material);sprite.scale.set(.34,.34,1);sprite.renderOrder=40;scene.add(sprite);walker.badge=sprite;const element=document.createElement('div');element.className='walker-label';element.textContent=`${tr('transmitting')} ${localize(flow,'payload')}`;element.dataset.full=element.textContent;const labelObject=new CSS2DObject(element);scene.add(labelObject);walker.label={element,object:labelObject};walkerLabels.set(id,walker.label);}});
+        const ids=walkers.map(walker=>walker.id),eyeIds=walkers.flatMap(walker=>[walker.id,walker.id]),shadowIds=ids.slice(),bodyMaterial=new THREE.MeshStandardMaterial({color:0xffffff,emissive:DATA.palette.teal,emissiveIntensity:.58,roughness:.76,metalness:0}),eyeMaterial=new THREE.MeshBasicMaterial({color:DATA.palette.ink}),shadowMaterial=new THREE.MeshBasicMaterial({color:0x24302c,transparent:true,opacity:.22,depthWrite:false});
+        const bodies=makeWalkerMesh(new THREE.CapsuleGeometry(.105,.14,5,10),bodyMaterial,walkers.length,ids),eyes=makeWalkerMesh(new THREE.SphereGeometry(.029,8,5),eyeMaterial,eyeIds.length,eyeIds),shadows=makeWalkerMesh(new THREE.CircleGeometry(.16,14),shadowMaterial,walkers.length,shadowIds);const accessoryMeshes={};
+        const geometries={lock:new THREE.TorusGeometry(.079,.022,7,12,Math.PI),shield:new THREE.IcosahedronGeometry(.098,1),magnifier:new THREE.TorusGeometry(.075,.018,7,12)};
+        Object.keys(geometries).forEach(type=>{const selected=walkers.filter(walker=>walker.accessory===type);accessoryMeshes[type]=makeWalkerMesh(geometries[type],new THREE.MeshStandardMaterial({color:DATA.palette.coral,emissive:DATA.palette.coral,emissiveIntensity:.16,roughness:.82,metalness:0}),selected.length,selected.map(walker=>walker.id));selected.forEach((walker,accessoryIndex)=>walker.accessoryIndex=accessoryIndex);});
+        walkerMeshes={bodies,eyes,shadows,accessories:accessoryMeshes,all:[bodies,eyes,shadows,...Object.values(accessoryMeshes)]};validFlows.forEach((flow,flowIndex)=>walkers.filter(walker=>walker.flow===flow).forEach(walker=>bodies.setColorAt(walker.index,new THREE.Color().setHSL((flowIndex*.11+.47)%1,.58,.57))));if(bodies.instanceColor)bodies.instanceColor.needsUpdate=true;updateWalkers(0,0,true);
+      }
+      function setWalkerMatrix(mesh,index,position,quaternion=tempWalkerQuaternion,scale=tempWalkerScale){tempWalkerMatrix.compose(position,quaternion,scale);mesh.setMatrixAt(index,tempWalkerMatrix);}
+      function updateWalkerMatrices(simulationSeconds){
+        if(!walkerMeshes)return;walkers.forEach(walker=>{const ph=simulationSeconds*9+walker.phase*20,hover=Math.abs(Math.sin(ph))*.012;pointOnRoute(walker.route,walker.distance,walker.position);directionOnRoute(walker.route,walker.distance,walker.direction,walker.heading);const yaw=Math.atan2(walker.heading.x,walker.heading.z);tempWalkerQuaternion.setFromEuler(tempWalkerEuler.set(0,yaw,0));tempWalkerPoint.copy(walker.position);tempWalkerPoint.y+=.18+hover;setWalkerMatrix(walkerMeshes.bodies,walker.index,tempWalkerPoint,tempWalkerQuaternion,tempWalkerScale.set(1.08,1,1.08));for(let eye=0;eye<2;eye++){tempWalkerOffset.set(eye?-.043:.043,.225,.096).applyQuaternion(tempWalkerQuaternion);tempWalkerPoint.copy(walker.position).add(tempWalkerOffset).setY(walker.position.y+tempWalkerOffset.y+hover);setWalkerMatrix(walkerMeshes.eyes,walker.index*2+eye,tempWalkerPoint,tempWalkerQuaternion,tempWalkerScale.set(1,1,1));}tempWalkerQuaternion.setFromEuler(tempWalkerEuler.set(-Math.PI/2,0,0));setWalkerMatrix(walkerMeshes.shadows,walker.index,tempWalkerPoint.copy(walker.position).setY(DATA.stage4.routeHeight+.006),tempWalkerQuaternion,tempWalkerScale.set(1,1,1));const accessory=walkerMeshes.accessories[walker.accessory];tempWalkerQuaternion.setFromEuler(tempWalkerEuler.set(walker.accessory==='lock'?0:Math.PI/2,yaw,0));tempWalkerOffset.set(.16,.21,-.01).applyAxisAngle(tempYAxis,yaw);tempWalkerPoint.copy(walker.position).add(tempWalkerOffset).setY(walker.position.y+.21+hover);setWalkerMatrix(accessory,walker.accessoryIndex,tempWalkerPoint,tempWalkerQuaternion,tempWalkerScale.set(1,1,1));walker.badge.position.copy(walker.position);walker.badge.position.y+=.58+hover;walker.label.object.position.copy(walker.position);walker.label.object.position.y+=.72+hover;});walkerMeshes.all.forEach(mesh=>mesh.instanceMatrix.needsUpdate=true);
+      }
+      function updateWalkers(delta,simulationSeconds,force=false){if(!walkerMeshes&&!force)return;walkers.forEach(walker=>{if(walker.state==='handoff'){walker.wait-=delta;if(walker.wait<=0){walker.direction*=-1;walker.state=walker.direction>0?'forward':'returning';}return;}walker.distance+=walker.flow.speed*delta*walker.direction;if(walker.direction>0&&walker.distance>=walker.route.length){walker.distance=walker.route.length;walker.state='handoff';walker.wait=DATA.stage4.handoffSeconds;recordArrival(walker,true);}else if(walker.direction<0&&walker.distance<=0){walker.distance=0;walker.state='handoff';walker.wait=DATA.stage4.handoffSeconds;recordArrival(walker,false);}});updateWalkerMatrices(simulationSeconds);}
+
+      function recordArrival(walker,outbound){const flow=walker.flow,pending=flow.mode==='pending',type=pending?(outbound?'waiting':'timeout'):(outbound?'request':'response'),from=outbound?flow.from:flow.to,to=outbound?flow.to:flow.from;logEntries.unshift({time:formatTime(Math.floor(simulatedMinutes)),type,flowId:flow.id,from,to,payload:localize(flow,'payload')});if(logEntries.length>DATA.stage4.maxLogs)logEntries.length=DATA.stage4.maxLogs;logDirty=true;}
+      function renderLogs(now,force=false){if(pageHidden||!logsOn||(!force&&(!logDirty||now-lastLogDomUpdate<DATA.stage4.logDomInterval)))return;lastLogDomUpdate=now;logDirty=false;const filter=ui.logFilter.value,entries=filter==='all'?logEntries:logEntries.filter(entry=>entry.flowId===filter);ui.logList.innerHTML=entries.length?entries.map(entry=>{const from=serviceById.get(entry.from),to=serviceById.get(entry.to);return `<article class="log-entry"><time>${entry.time}</time><b>${escapeHTML(tr(entry.type))}</b><span><strong>${escapeHTML(localize(DATA.flows.find(flow=>flow.id===entry.flowId)||{name:entry.flowId}))}</strong><br>${escapeHTML(from?localize(from):entry.from)} → ${escapeHTML(to?localize(to):entry.to)}<br>${escapeHTML(entry.payload)}</span></article>`;}).join(''):`<div class="log-empty">${tr('noLog')}</div>`;}
+      function updateLiveState(){const paused=isPaused||reducedMotion;ui.liveDot.classList.toggle('is-paused',paused);ui.liveState.textContent=paused?tr('pausedState'):tr('live');}
+      function updateFlowVisibility(){let visibleCount=0;flowMeshes.forEach((mesh,flowId)=>{mesh.visible=apiLinesOn||selection.visibleFlowIds.has(flowId);if(mesh.visible)visibleCount++;});ui.legend.hidden=visibleCount===0;needsRender=true;}
+      function updatePacketVisibility(){const cameraPosition=camera.position;walkers.forEach(walker=>{const distance=cameraPosition.distanceTo(walker.position),showBadge=packetsOn&&distance<DATA.stage4.badgeDistance,showLabel=packetsOn&&labelsOn&&distance<DATA.stage4.labelDistance;walker.badge.visible=showBadge;walker.label.object.visible=showLabel;});if(walkerMeshes)walkerMeshes.all.forEach(mesh=>mesh.visible=packetsOn);}
+      function setStage4Toggle(kind,value){if(kind==='labels')labelsOn=value;if(kind==='packets')packetsOn=value;if(kind==='apiLines')apiLinesOn=value;if(kind==='logs')logsOn=value;ui.labels.setAttribute('aria-pressed',String(labelsOn));ui.packets.setAttribute('aria-pressed',String(packetsOn));ui.apiLines.setAttribute('aria-pressed',String(apiLinesOn));ui.logs.setAttribute('aria-pressed',String(logsOn));ui.logs.setAttribute('aria-expanded',String(logsOn));ui.logPanel.classList.toggle('is-open',logsOn);if(kind==='logs'&&logsOn){if(innerWidth<=1100)toggleCatalog(false);if(isMobileLayout()){ui.detail.classList.remove('is-open');toggleMobileHud(false);}logDirty=true;renderLogs(performance.now(),true);}updatePacketVisibility();updateFlowVisibility();lastCollisionCheck=0;needsRender=true;}
+      function initStage4(){createFlowLines();createWalkers();ui.logFilter.innerHTML=`<option value="all">${tr('allFlows')}</option>${DATA.flows.map(flow=>`<option value="${flow.id}">${escapeHTML(localize(flow))}</option>`).join('')}`;setStage4Toggle('labels',labelsOn);setStage4Toggle('packets',packetsOn);setStage4Toggle('apiLines',apiLinesOn);setStage4Toggle('logs',logsOn);updateLiveState();}
+
+      function updateLabelCollisions(now){
+        if(now-lastCollisionCheck<120)return;lastCollisionCheck=now;const obstacles=[document.querySelector('.brand'),ui.catalog,ui.detail,ui.logPanel,ui.legend,document.querySelector('.hud')].filter(element=>element&&element.getClientRects().length&&getComputedStyle(element).visibility!=='hidden').map(element=>element.getBoundingClientRect());const accepted=[];
+        const candidates=[...islandLabels.values()].map(item=>item.element).concat([...servicePins.values()].filter(item=>item.object.visible).map(item=>item.element),[...walkerLabels.values()].filter(item=>item.object.visible).map(item=>item.element));
+        const overlaps=(rect,padding=0)=>[...obstacles,...accepted].some(other=>!(rect.right+padding<other.left-padding||rect.left-padding>other.right+padding||rect.bottom+padding<other.top-padding||rect.top-padding>other.bottom+padding));
+        candidates.forEach(element=>{const wasHidden=element.classList.contains('is-collision-hidden');element.classList.remove('is-collision-hidden','is-compact');if(element.classList.contains('island-label'))element.textContent=element.dataset.full;let rect=element.getBoundingClientRect();if(overlaps(rect,wasHidden?DATA.stage3.labelHysteresis:0)){element.classList.add('is-compact');if(element.classList.contains('island-label'))element.textContent=element.dataset.short;rect=element.getBoundingClientRect();if(overlaps(rect,wasHidden?DATA.stage3.labelHysteresis:0))element.classList.add('is-collision-hidden');}if(!element.classList.contains('is-collision-hidden'))accepted.push(element.getBoundingClientRect());});
+      }
+
+      // Deliberate extension points for phase 3 selection/highlighting and later routing.
+      window.APIServiceIsland = Object.freeze({
+        DATA, dijkstra, roadGraph, bridges, seed, serviceInstances, selection,flowRoutes,flowMeshes,walkers,walkerById,logEntries,
+        selectIsland,selectItem,selectFlow,selectWalker,clearSelection,
+        setBirdView,focusOverview,
+        get stage2InstancedDrawCalls(){ return stage2DrawCalls; },
+        get rendererInfo(){ return renderer.info.render; },get rendererMemory(){return{...renderer.info.memory};},get renderedFrames(){return renderedFrames;},get language(){return UI_LANG;},get simulatedMinutes(){return simulatedMinutes;},get reducedMotion(){return reducedMotion;},
+        getSceneStats(){const stats={objects:0,meshes:0,instancedMeshes:0,geometries:new Set(),materials:new Set(),textures:new Set()};scene.traverse(object=>{stats.objects++;if(object.isMesh){stats.meshes++;if(object.isInstancedMesh)stats.instancedMeshes++;if(object.geometry)stats.geometries.add(object.geometry.uuid);const materials=Array.isArray(object.material)?object.material:[object.material];materials.filter(Boolean).forEach(material=>{stats.materials.add(material.uuid);Object.values(material).forEach(value=>{if(value?.isTexture)stats.textures.add(value.uuid);});});}});return{objects:stats.objects,meshes:stats.meshes,instancedMeshes:stats.instancedMeshes,geometries:stats.geometries.size,materials:stats.materials.size,textures:stats.textures.size};},
+        get cameraFlightActive(){return Boolean(cameraFlight);},get birdView(){return birdView;},get paused(){return isPaused||reducedMotion;},
+        get stage4State(){return{labelsOn,packetsOn,apiLinesOn,logsOn,validRoutes:flowRoutes.size,walkers:walkers.length,logs:logEntries.length,visibleLines:[...flowMeshes.values()].filter(mesh=>mesh.visible).length,visibleBadges:walkers.filter(walker=>walker.badge.visible).length,visibleLabels:walkers.filter(walker=>walker.label.object.visible).length,packetMeshesVisible:walkerMeshes?.all.every(mesh=>mesh.visible)??false};},
+        getCameraState(){return{position:camera.position.toArray(),target:controls.target.toArray(),maxPolarAngle:controls.maxPolarAngle};},
+        projectService(serviceId){const position=servicePositions.get(serviceId)?.clone();if(!position)return null;position.y+=1;position.project(camera);const rect=renderer.domElement.getBoundingClientRect();return{x:rect.left+(position.x+1)*rect.width/2,y:rect.top+(-position.y+1)*rect.height/2};},
+        projectWalker(walkerId){const position=walkerById.get(walkerId)?.position.clone();if(!position)return null;position.y+=.18;position.project(camera);const rect=renderer.domElement.getBoundingClientRect();return{x:rect.left+(position.x+1)*rect.width/2,y:rect.top+(-position.y+1)*rect.height/2};},
+        projectFlow(flowId){const route=flowRoutes.get(flowId);if(!route)return null;const position=pointOnRoute(route,route.length*.5).project(camera),rect=renderer.domElement.getBoundingClientRect();return{x:rect.left+(position.x+1)*rect.width/2,y:rect.top+(-position.y+1)*rect.height/2};},
+        setTime(minutes){ simulatedMinutes=((Number(minutes)%1440)+1440)%1440; updateDaylight(simulatedMinutes); }
+      });
+
+      let simulatedMinutes = 8*60;
+      let lastTime = performance.now();
+      const daySpeed = 10;
+      const tempColorA = new THREE.Color(), tempColorB = new THREE.Color();
+      function updateDaylight(minutes) {
+        const frames=DATA.lightKeyframes;
+        let a=frames[0], b=frames[1];
+        for(let i=0;i<frames.length-1;i++) if(minutes>=frames[i].minute && minutes<=frames[i+1].minute){ a=frames[i]; b=frames[i+1]; break; }
+        const t=THREE.MathUtils.smoothstep((minutes-a.minute)/(b.minute-a.minute),0,1);
+        const mix=(key,target)=>target.copy(tempColorA.set(a[key])).lerp(tempColorB.set(b[key]),t);
+        mix('sky',skyUniforms.topColor.value); mix('horizon',skyUniforms.bottomColor.value); mix('sun',skyUniforms.sunColor.value);
+        mix('fog',scene.fog.color); waterUniforms.uFogColor.value.copy(scene.fog.color); mix('water',waterUniforms.uColor.value);
+        sun.color.copy(skyUniforms.sunColor.value); sun.intensity=THREE.MathUtils.lerp(a.sunIntensity,b.sunIntensity,t);
+        hemi.intensity=THREE.MathUtils.lerp(a.hemiIntensity,b.hemiIntensity,t);
+        const night=THREE.MathUtils.clamp(1-sun.intensity/.72,0,1);
+        ambient.intensity=THREE.MathUtils.lerp(.28,1.05,night);
+        nightMaterials.forEach(material=>{ material.emissiveIntensity=night*3.2; material.opacity=.10+night*.62; });
+        silhouetteMaterials.forEach((material,index)=>{
+          material.color.copy(skyUniforms.bottomColor.value).lerp(tempColorA.set('#132d38'),.64+index*.10);
+        });
+        const angle=(minutes/1440)*Math.PI*2-Math.PI/2;
+        const altitude=Math.sin(angle);
+        sun.position.set(Math.cos(angle)*72,Math.max(5,altitude*74),Math.sin(angle)*38);
+        skyUniforms.sunDirection.value.copy(sun.position).normalize(); waterUniforms.uSun.value.copy(skyUniforms.sunDirection.value);
+        const hh=String(Math.floor(minutes/60)%24).padStart(2,'0'); const mm=String(Math.floor(minutes%60)).padStart(2,'0');
+        clockEl.textContent=`${hh}:${mm}`;
+        updatePeriodAndLoad(minutes);
+        needsRender=true;
+      }
+      updateDaylight(simulatedMinutes);
+      initStage3UI();
+      initStage4();
+
+      const resize = () => {
+        const width=Math.max(1,container.clientWidth), height=Math.max(1,container.clientHeight);
+        camera.aspect=width/height; camera.updateProjectionMatrix();
+        renderer.setPixelRatio(Math.min(devicePixelRatio, width<=DATA.stage5.mobileBreakpoint?DATA.stage5.mobilePixelRatio:2));
+        renderer.setSize(width,height,false); labelRenderer.setSize(width,height);
+        needsRender=true;lastCollisionCheck=0;
+      };
+      const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(container); resize();
+      const onMotionChange = event => { reducedMotion=event.matches; controls.enableDamping=!reducedMotion; flowMeshes.forEach(mesh=>mesh.material.uniforms.uThreshold.value=reducedMotion?.52:mesh.userData.baseThreshold);if(reducedMotion){waterUniforms.uTime.value=0;cancelCameraFlight();} updatePauseButton();updateLiveState();needsRender=true; };
+      reducedQuery.addEventListener?.('change',onMotionChange);
+
+      statusEl.classList.add('is-hidden');
+      syncResponsivePanels();
+      if(!readTutorialSeen())setTimeout(()=>openTutorial(document.querySelector('#help-btn')),120);
+      function animate(now) {
+        requestAnimationFrame(animate);
+        const delta=Math.min((now-lastTime)/1000,DATA.stage4.maxDelta); lastTime=now;
+        if(pageHidden)return;
+        if(!reducedMotion&&!isPaused) {
+          simulatedMinutes=(simulatedMinutes+delta*daySpeed)%1440;
+          waterUniforms.uTime.value+=delta;
+          cloudField?.update(delta);
+          flowPatternTime+=delta;
+          flowMeshes.forEach(mesh=>mesh.material.uniforms.uTime.value=flowPatternTime);
+          updateWalkers(delta,flowPatternTime);
+          updateDaylight(simulatedMinutes);
+          needsRender=true;
+        }
+        updateCameraFlight(now);
+        const controlsChanged=controls.enableDamping?controls.update():false;
+        if(cameraFlight||controlsChanged)needsRender=true;
+        renderLogs(now);
+        if(!needsRender)return;
+        const cameraDistance=camera.position.distanceTo(controls.target);
+        nearMeshes.forEach(mesh=>mesh.visible=cameraDistance<DATA.stage2.smallPropHideDistance);
+        updatePacketVisibility();
+        renderer.render(scene,camera); labelRenderer.render(scene,camera);renderedFrames++;
+        updateLabelCollisions(now);
+        needsRender=!reducedMotion&&!isPaused||Boolean(cameraFlight)||Boolean(controlsChanged);
+        document.documentElement.dataset.sceneReady='true';
+        document.documentElement.dataset.drawCalls=String(renderer.info.render.calls);
+        document.documentElement.dataset.triangles=String(renderer.info.render.triangles);
+      }
+      requestAnimationFrame(animate);
+    }
+
+    function makeGroundTexture(THREE, rng) {
+      const canvas=document.createElement('canvas'); canvas.width=canvas.height=256;
+      const ctx=canvas.getContext('2d'); ctx.fillStyle='#8ba789'; ctx.fillRect(0,0,256,256);
+      for(let i=0;i<1600;i++){ const v=Math.floor(95+rng()*55); ctx.fillStyle=`rgba(${v-25},${v},${v-35},${.06+rng()*.12})`; const s=1+rng()*3; ctx.fillRect(rng()*256,rng()*256,s,s); }
+      const texture=new THREE.CanvasTexture(canvas); texture.wrapS=texture.wrapT=THREE.RepeatWrapping; texture.repeat.set(3,3); texture.colorSpace=THREE.SRGBColorSpace; return texture;
+    }
+    function makePatternTexture(THREE) {
+      const canvas=document.createElement('canvas'); canvas.width=canvas.height=128;
+      const ctx=canvas.getContext('2d'); ctx.fillStyle='#3d8e91'; ctx.fillRect(0,0,128,128); ctx.strokeStyle='rgba(235,255,245,.65)'; ctx.lineWidth=8;
+      for(let x=-128;x<256;x+=32){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+128,128); ctx.stroke(); }
+      const texture=new THREE.CanvasTexture(canvas); texture.wrapS=texture.wrapT=THREE.RepeatWrapping; texture.repeat.set(5,1); texture.colorSpace=THREE.SRGBColorSpace; return texture;
+    }
+    class SimplexNoise2D {
+      constructor(random) {
+        const source=Array.from({length:256},(_,i)=>i);
+        for(let i=255;i>0;i--){ const j=Math.floor(random()*(i+1)); [source[i],source[j]]=[source[j],source[i]]; }
+        this.perm=new Uint8Array(512); for(let i=0;i<512;i++)this.perm[i]=source[i&255];
+        this.grad=[[1,1],[-1,1],[1,-1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]];
+      }
+      noise2D(x,y) {
+        const F=.5*(Math.sqrt(3)-1),G=(3-Math.sqrt(3))/6,s=(x+y)*F;
+        const i=Math.floor(x+s),j=Math.floor(y+s),t=(i+j)*G,x0=x-(i-t),y0=y-(j-t);
+        const i1=x0>y0?1:0,j1=x0>y0?0:1,x1=x0-i1+G,y1=y0-j1+G,x2=x0-1+2*G,y2=y0-1+2*G;
+        const ii=i&255,jj=j&255;
+        const corner=(px,py,gi)=>{ let n=.5-px*px-py*py;if(n<0)return 0;n*=n;const g=this.grad[gi&7];return n*n*(g[0]*px+g[1]*py); };
+        return 70*(corner(x0,y0,this.perm[ii+this.perm[jj]])+corner(x1,y1,this.perm[ii+i1+this.perm[jj+j1]])+corner(x2,y2,this.perm[ii+1+this.perm[jj+1]]));
+      }
+    }
+    function mulberry32(seed) {
+      return function(){ let t=seed+=0x6D2B79F5; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; };
+    }
+  </script>
+</body>
+</html>
